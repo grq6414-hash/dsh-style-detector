@@ -55,7 +55,7 @@ git push
 
 ### 方式 A：发 npm ✅ 已完成
 
-已发布：`dsh-style-detector@0.1.0` → <https://www.npmjs.com/package/dsh-style-detector>
+已发布：`dsh-style-detector@0.1.1` → <https://www.npmjs.com/package/dsh-style-detector>
 
 ```bash
 npm login                      # 首次需要；开了 2FA 的账号建议直接用 Automation Token
