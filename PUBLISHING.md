@@ -13,8 +13,8 @@
 | `package.json` 声明 `dsh.bundle.patch` | 必须有，否则 `dsh plugin add` 装不上 | ✅ 已有 |
 | `cordis.patch.yml` 在包根 | 一个 `- insert:` 条目，`name` 必须是 npm 包名 | ✅ 已有 |
 | 仓库里有真实可用的代码 | 不能是占位仓库 | ✅ 已有（4700 行） |
-| 仓库建满 1 天 | 市场 CI 自动检查 | ⬜ 建仓后等一天 |
-| 仓库加 `dsh-plugin` topic | 市场收录要求 | ⬜ |
+| 仓库建满 1 天 | 市场 CI 自动检查 | 🕒 建于 2026-11-14，次日才满 |
+| 仓库加 `dsh-plugin` topic | 市场收录要求 | ✅ 已加 6 个 topic |
 | `repository` 字段指回仓库 | npm 包与仓库关联靠它 | ✅ 已填 `grq6414-hash` |
 
 `package.json` 里的仓库地址**已经填好**（指向 `github.com/grq6414-hash/dsh-style-detector`）：
@@ -29,18 +29,25 @@
 
 ---
 
-## 1. 建仓库并推上去
+## 1. 仓库 ✅ 已完成
+
+仓库已建好并推送完毕：
+
+- 地址：<https://github.com/grq6414-hash/dsh-style-detector>
+- 分支 `main`，本地已设置 upstream 跟踪
+- topic：`dsh-plugin` `dsh` `cordis` `chinese` `writing-tool` `ai-detection`
+
+以后改了代码要推：
 
 ```bash
-cd dsh-style-detector
-git init -b main
+cd C:\Software\AI\DEEPSEEK2\dsh-style-detector
 git add -A
-git commit -m "feat: 首次提交（AI 文风检测器 0.1.0）"
-git remote add origin https://github.com/grq6414-hash/dsh-style-detector.git
-git push -u origin main
+git commit -m "feat: 说明这次改了什么"
+git push
 ```
 
-然后在 GitHub 仓库页面加 topic：`Settings` → 或者仓库首页右侧 `Topics` 齿轮 → 填 `dsh-plugin`。
+> **注意**：这台机器访问 `github.com:443` 不稳定，`git push` 有时报 `Recv failure: Connection was reset`。
+> **直接重试一般就能过**。连续失败的话用 GitHub Desktop 或网页版上传也行——内容不依赖 git 历史。
 
 ---
 
