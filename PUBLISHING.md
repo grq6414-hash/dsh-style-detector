@@ -51,7 +51,7 @@ git push
 
 ---
 
-## 2. 发布到 npm
+## 2. 发布方式（二选一或都做）
 
 ```bash
 npm login                      # 首次需要
@@ -80,6 +80,28 @@ cordis.patch.yml  icon.svg  index.js  locale/en.json  locale/zh.json  package.js
 
 ---
 
+### 方式 B：只发 GitHub Release（不需要 npm 账号）✅ 已完成
+
+v0.1.0 的 release 已经建好，`.tgz` 已上传：
+
+- Release 页：<https://github.com/grq6414-hash/dsh-style-detector/releases/tag/v0.1.0>
+- 直链：https://github.com/grq6414-hash/dsh-style-detector/releases/download/v0.1.0/dsh-style-detector-0.1.0.tgz
+
+别人这样装：
+
+```bash
+dsh plugin add https://github.com/grq6414-hash/dsh-style-detector/releases/download/v0.1.0/dsh-style-detector-0.1.0.tgz
+```
+
+以后发新版：
+
+```bash
+npm pack                              # 生成 dsh-style-detector-x.y.z.tgz
+gh release create vx.y.z dsh-style-detector-x.y.z.tgz --title "vx.y.z" --notes "改了什么"
+```
+
+> npm 和 Release 不冲突。发了 npm 之后，市场会优先给 `dsh plugin add dsh-style-detector` 这条短命令；
+> 没发 npm 就只有长 URL。两个都做体验最好。
 ## 3. 提交到市场（可选，但推荐）
 
 市场索引 [dsh-plugin-catalog](https://cdn.jsdelivr.net/npm/dsh-plugin-catalog/index.json) 由 [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) 生成。收录方式是**一个 PR、一个文件**。

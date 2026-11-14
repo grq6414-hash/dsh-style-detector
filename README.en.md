@@ -11,24 +11,35 @@ A right-sidebar tab plugin for DSH (DeepSeek Harness). Paste some Chinese text a
 
 ## Install
 
-```bash
-# 1) install into the current profile
-dsh plugin add dsh-style-detector
+### Desktop app (GUI)
 
-# 2) fully quit DSH and reopen it (do not just reload the page)
+1. Open **Settings → Plugins**
+2. Search the market for `dsh-style-detector`, or install by package name
+3. **Fully quit DSH and reopen it** (not just closing the window, not a page reload)
+4. Open the right sidebar's "+" guide page and pick "AI 文风检测" (AI style detector)
+
+### Straight from GitHub (no npm needed)
+
+```bash
+dsh plugin add https://github.com/grq6414-hash/dsh-style-detector/releases/download/v0.1.0/dsh-style-detector-0.1.0.tgz
+# then fully quit DSH and reopen it
 ```
 
-Then open the right sidebar's "+" guide page and pick "AI 文风检测".
+You can also grab the `.tgz` by hand from the [Releases page](https://github.com/grq6414-hash/dsh-style-detector/releases).
 
-> **Why a full restart is required**: the plugin manifest (`dsh.profile.bundles`) and the frontend boot graph (`window.__DSH_BOOT__`) are generated together at process start. Enabling or disabling a plugin at runtime and then reloading the page can leave the boot graph without that plugin's factory — the tab entry sticks in `loading` and the whole Web UI goes blank (DSH has no safe mode yet, so you have to kill the process). **Change plugin state → quit fully → reopen.**
-
-Manual install:
+### Manual
 
 ```bash
 cd ~/.dsh/profiles/<your profile>
-pnpm add dsh-style-detector
+pnpm add https://github.com/grq6414-hash/dsh-style-detector/releases/download/v0.1.0/dsh-style-detector-0.1.0.tgz
 # then add "dsh-style-detector" to the dsh.profile.bundles array in package.json
 ```
+
+> Once this package is published to npm, `pnpm add dsh-style-detector` works too.
+
+> **Why a full restart is required**: the plugin manifest (`dsh.profile.bundles`) and the frontend boot graph (`window.__DSH_BOOT__`) are generated together at process start. Enabling or disabling a plugin at runtime and then reloading the page can leave the boot graph without that plugin's factory — the tab entry sticks in `loading` and the whole Web UI goes blank (DSH has no safe mode yet, so you have to kill the process). **Change plugin state → quit fully → reopen.**
+
+> **Do not install this next to the local development copy.** If you previously linked the dev version from `created-plugins`, uninstall it first: both register the same tab kind and the same `/dsh-style-detector/*` routes, and the later one silently loses.
 
 ## What it does
 

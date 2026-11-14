@@ -18,6 +18,15 @@
 3. **完全退出 DSH 再重新打开**（不是关窗口、不是刷新页面）
 4. 右侧栏的「+」指南页里选「AI 文风检测」
 
+### 直接从 GitHub 装（不需要 npm）
+
+```bash
+dsh plugin add https://github.com/grq6414-hash/dsh-style-detector/releases/download/v0.1.0/dsh-style-detector-0.1.0.tgz
+# 然后完全退出 DSH 再重新打开
+```
+
+也可以在 [Releases 页](https://github.com/grq6414-hash/dsh-style-detector/releases) 手动下载 `.tgz`。
+
 ### 命令行（装了 DSH CLI 的话）
 
 ```bash
@@ -29,9 +38,11 @@ dsh plugin add dsh-style-detector
 
 ```bash
 cd ~/.dsh/profiles/<你的 profile>
-pnpm add dsh-style-detector
+pnpm add https://github.com/grq6414-hash/dsh-style-detector/releases/download/v0.1.0/dsh-style-detector-0.1.0.tgz
 # 然后在 package.json 的 dsh.profile.bundles 数组里加上 "dsh-style-detector"
 ```
+
+> 等这个包发到 npm 之后，上面这句可以简写成 `pnpm add dsh-style-detector`。
 
 > **为什么必须完全重启**：插件清单（`dsh.profile.bundles`）和前端启动图（`window.__DSH_BOOT__`）是在进程启动时一起生成的。运行中启停插件后再刷新页面，启动图里可能没有新插件的 factory，页签会卡在 `loading` 状态并导致整个 Web 界面白屏（DSH 目前没有安全模式，只能杀进程）。**改插件状态 → 完全退出 → 重开**，这条要记住。
 
