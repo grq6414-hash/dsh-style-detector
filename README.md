@@ -1,5 +1,7 @@
 # AI 文风检测器 · dsh-style-detector
 
+[![npm](https://img.shields.io/npm/v/dsh-style-detector.svg)](https://www.npmjs.com/package/dsh-style-detector) [![GitHub release](https://img.shields.io/github/v/release/grq6414-hash/dsh-style-detector.svg)](https://github.com/grq6414-hash/dsh-style-detector/releases)
+
 一个给 [DSH](https://github.com/deepseek-ai)（DeepSeek Harness）用的右侧栏页签插件：粘贴一段中文，实时给出 0–100 的「AI 味」评分与分项诊断，标注问题片段，逐条给出改写建议，并能一键替换原文。
 
 **定位说清楚**：这是一个**文本机械性风险检测器**，不是 AI 鉴定器。它检测的是「读起来像不像机器批量生产的中文」，用的是可解释的本地规则；分数低只说明没踩这十几个坑，**不等于写得好，也不等于能通过平台的检测**。
@@ -17,6 +19,15 @@
 2. 在「市场」里搜 `dsh-style-detector`，或直接用包名安装
 3. **完全退出 DSH 再重新打开**（不是关窗口、不是刷新页面）
 4. 右侧栏的「+」指南页里选「AI 文风检测」
+
+### 从 npm 装（推荐）
+
+```bash
+dsh plugin add dsh-style-detector
+# 然后完全退出 DSH 再重新打开
+```
+
+包页：https://www.npmjs.com/package/dsh-style-detector
 
 ### 直接从 GitHub 装（不需要 npm）
 
@@ -42,7 +53,7 @@ pnpm add https://github.com/grq6414-hash/dsh-style-detector/releases/download/v0
 # 然后在 package.json 的 dsh.profile.bundles 数组里加上 "dsh-style-detector"
 ```
 
-> 等这个包发到 npm 之后，上面这句可以简写成 `pnpm add dsh-style-detector`。
+> 这个包已经发到 npm（`dsh-style-detector@0.1.0`），所以上面这句也可以简写成 `pnpm add dsh-style-detector`。
 
 > **为什么必须完全重启**：插件清单（`dsh.profile.bundles`）和前端启动图（`window.__DSH_BOOT__`）是在进程启动时一起生成的。运行中启停插件后再刷新页面，启动图里可能没有新插件的 factory，页签会卡在 `loading` 状态并导致整个 Web 界面白屏（DSH 目前没有安全模式，只能杀进程）。**改插件状态 → 完全退出 → 重开**，这条要记住。
 

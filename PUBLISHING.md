@@ -53,8 +53,12 @@ git push
 
 ## 2. 发布方式（二选一或都做）
 
+### 方式 A：发 npm ✅ 已完成
+
+已发布：`dsh-style-detector@0.1.0` → <https://www.npmjs.com/package/dsh-style-detector>
+
 ```bash
-npm login                      # 首次需要
+npm login                      # 首次需要；开了 2FA 的账号建议直接用 Automation Token
 npm publish --access public    # 包名不带 scope，默认就是 public
 ```
 
@@ -78,8 +82,14 @@ cordis.patch.yml  icon.svg  index.js  locale/en.json  locale/zh.json  package.js
 3. `npm publish`
 4. `git tag v0.1.1 && git push --tags`
 
----
+> **首次发布会看到 `0.0.0-stage`**：registry 会先建一个占位版本并进入自动审核。
+> 审核通过后 `latest` 自动指向正式版本（这次大约 2 分钟）。看到占位版本不用管。
 
+> **2FA 提示**：账号设成 `auth-and-writes` 时，`npm publish` 会要 6 位验证码（`EOTP`）。
+> 两种解法：发布时加 `--otp=<验证码>`，或改用 Automation Token（在 `~/.npmrc` 写
+> `//registry.npmjs.org/:_authToken=...`），后者不需要验证码。
+
+---
 ### 方式 B：只发 GitHub Release（不需要 npm 账号）✅ 已完成
 
 v0.1.0 的 release 已经建好，`.tgz` 已上传：

@@ -18,6 +18,15 @@ A right-sidebar tab plugin for DSH (DeepSeek Harness). Paste some Chinese text a
 3. **Fully quit DSH and reopen it** (not just closing the window, not a page reload)
 4. Open the right sidebar's "+" guide page and pick "AI 文风检测" (AI style detector)
 
+### From npm (recommended)
+
+```bash
+dsh plugin add dsh-style-detector
+# then quit DSH completely and reopen it
+```
+
+Package page: https://www.npmjs.com/package/dsh-style-detector
+
 ### Straight from GitHub (no npm needed)
 
 ```bash
