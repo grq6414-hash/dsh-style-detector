@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "AI Writing-Style Detector",
+    "description": "Paste Chinese text into the right sidebar for a live 0–100 \"AI flavor\" score, per-dimension diagnostics and item-by-item rewrite advice from a local rule engine. Switch between the general and web-novel genres (separate word lists, weights and review prompts). A model reviews the semantics automatically (toggleable) and its findings merge into the same analysis while the score stays local. Also includes a top-fixes ranking, ignore/restore, custom word lists, sentence rhythm, a target score, paragraph heat, version compare and whole-chapter batch. The review model can also be switched from the providers bound on this machine (affects this panel only). A separate typo page ships a fixed miswriting table plus an optional model pass for homophone and idiom slips, without touching the style score. Settings can be exported and imported; the batch page shows a per-chapter trend."
+  }
+}

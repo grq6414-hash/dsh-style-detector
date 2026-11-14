@@ -1,0 +1,6 @@
+# dsh-style-detector bundle patch
+# 由 DSH 的 reconcilePlugins 并入 profile 的 dsh.profile.bundles，boot 时并进补丁树。
+# id 是条目名（唯一即可），name 必须是 npm 包名。
+- insert:
+    - id: style-detector
+      name: dsh-style-detector
