@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.1.2 — 2026-11-16
+
+**修复一个会让 DSH 整个前端起不来的挂载缺陷。**
+
+### 修了什么
+
+`probe()` 里第二次访问服务时没有做保护：
+
+```js
+try {
+  var svc = ctx.get(name, false);   // 这一句有 try/catch
+  if (svc) return svc;
+} catch (e) { }
+return ctx[name] || null;            // 这一句没有 —— 就是它
+```
+
+cordis 的 `ctx` 是 Proxy，访问没有 `inject` 的服务会直接抛
+`cannot get property "sidebarRightTabs" without inject`。这一句在 try/catch 外面，
+所以只要侧栏服务比本插件晚一步就绪，异常就会冒到 cordis 的 fiber 里。
+
+### 现在的样子
+
+三层兜底，任何一层出问题都不会往外冒：
+
+1. `probe()` 两次访问都在 try/catch 里，拿不到就返回 `null`
+2. `track()` 直接调用分支也包了 try/catch
+3. `mountOnce()` 整体包一层，内部改名为 `mountInner()`
+
+服务没就绪时仍然退避重试（150ms × 40 次），拿不到就安静放弃——
+面板不出现，但 DSH 照常启动。
+
+### 升级建议
+
+**装过 0.1.0 / 0.1.1 的请升级。** 之前那两版在「侧栏服务比插件晚就绪」的机器上
+会拖垮整个 web boot，表现是白屏 + `web boot: 1 entry did not activate`。
+
+---
+
 ## 0.1.1 — 2026-11-14
 
 只有文档变化，**代码与 0.1.0 完全一致**，不需要升级。

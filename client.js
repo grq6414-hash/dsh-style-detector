@@ -4551,11 +4551,17 @@ window.__ModuleLoader__.load({
      * ------------------------------------------------------------------ */
 
     function probe(ctx, name) {
+      // cordis 的 ctx 是 Proxy：访问没有 inject 的服务会直接抛
+      // 「cannot get property "X" without inject」。两次访问都必须包住，
+      // 否则 apply 里任何一次探测失败都会冒到 boot 审计里。
       try {
         var svc = typeof ctx.get === "function" ? ctx.get(name, false) : null;
         if (svc) return svc;
       } catch (e) { /* strict lookup missed */ }
-      return ctx[name] || null;
+      try {
+        return ctx[name] || null;
+      } catch (e2) { /* property access without inject */ }
+      return null;
     }
 
     function registerTab(ctx) {
@@ -4568,8 +4574,10 @@ window.__ModuleLoader__.load({
             return;
           }
         } catch (e) { /* fall through to direct call */ }
-        var out = fn();
-        if (typeof out === "function") disposers.push(out);
+        try {
+          var out = fn();
+          if (typeof out === "function") disposers.push(out);
+        } catch (e) { /* 绝不让挂载失败冒出去 */ }
       }
 
       var mounted = false;
@@ -4577,6 +4585,12 @@ window.__ModuleLoader__.load({
 
       var mountOnce = function () {
         if (mounted) return;
+        try {
+          mountInner();
+        } catch (e) { /* 任何异常都不冒到 boot */ }
+      };
+
+      var mountInner = function () {
         var tabs = probe(ctx, "sidebarRightTabs");
         var right = probe(ctx, "sidebarRight");
         // 只把「页签类型注册表」当作必要条件；sidebarRight 只是关闭页签时的辅助句柄，
