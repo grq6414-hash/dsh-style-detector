@@ -18,6 +18,14 @@ window.__ModuleLoader__.load({
     // 英文译文表。键是中文原文（源码里怎么写就怎么用），值是英文。
     // 只放界面文案；用户正文、模型返回的内容不在这里，也不会被翻译。
     var EN = {
+      "写作": "Writing",
+      "界面": "Interface",
+      "词表": "Word lists",
+      "维护": "Maintenance",
+      "默认跟随 DSH 的语言设置。": "Follows the DSH language setting by default.",
+      "只影响「标注」页里正文的字号。": "Only affects the manuscript size on the Markup page.",
+      "黑名单里的词一出现就算套话；白名单里的词永远不算问题。一行一条。": "A blocklisted word counts as a template phrase; an allowlisted word is never flagged. One per line.",
+      "只搬设置，不搬正文。导出后可以复制走，换机器时粘回来点「导入」。": "Settings only, not your manuscript. Copy the export and paste it back on another machine, then press Import.",
       "视图": "Views",
       "Alt+4 · 错字是文本对错，跟 AI 味分数无关，所以单开一页": "Alt+4 · Typos are a correctness check, not part of the AI-flavor score, so they get their own page",
       "正文": "Manuscript",
@@ -67,6 +75,9 @@ window.__ModuleLoader__.load({
       "撤销": "Undo",
       "目标分": "Target",
       "黑名单": "Blocklist",
+      "这些词一出现就算套话。一行一条。": "Any of these words counts as template phrasing. One per line.",
+      "这些词永远不算问题。一行一条。": "These words are never flagged. One per line.",
+      "写成 错→对，一行一条": "Write wrong→right, one per line",
       "白名单": "Allowlist",
       "字太少": "Too short",
       "文体模式": "Genre mode",
@@ -2979,32 +2990,50 @@ window.__ModuleLoader__.load({
      * Styles
      * ------------------------------------------------------------------ */
 
-    var CSS = [
+        var CSS = [
+      // 顺序要紧：.asd-root 必须是一条完整规则，设置页那段（.asd-settings…）跟在它后面。
+      // 之前设置页的样式被插在 .asd-root 的声明中间，整份样式表都变成了嵌套规则，设置页拿不到样式。
       ".asd-root{display:flex;flex-direction:column;gap:10px;padding:12px;height:100%;box-sizing:border-box;overflow-y:auto;",
-  // 设置页不在 .asd-root 里，所以要自己再声明一遍这套派生色，否则 --asd-surface 全是空值
-  ".asd-settings{display:flex;flex-direction:column;gap:14px;padding:4px 0 28px;--asd-surface:color-mix(in srgb,var(--dsw-alias-label-primary) 5%,transparent);--asd-surface-2:color-mix(in srgb,var(--dsw-alias-label-primary) 8%,transparent);--asd-line:color-mix(in srgb,var(--dsw-alias-label-primary) 14%,transparent);--asd-line-strong:color-mix(in srgb,var(--dsw-alias-label-primary) 24%,transparent);}",
-  ".asd-setTitle{margin:0;font-size:14px;font-weight:600;color:var(--dsw-alias-label-primary);}",
-  ".asd-setHint{margin:0;font-size:11px;line-height:1.6;color:var(--dsw-alias-label-tertiary);}",
-  ".asd-setRow{display:flex;gap:10px;align-items:flex-start;}",
-  ".asd-setLabel{flex:0 0 92px;font-size:11px;line-height:24px;color:var(--dsw-alias-label-secondary);}",
-  ".asd-setBody{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:6px;}",
-  ".asd-setNum{width:64px;height:24px;padding:0 6px;font:inherit;font-size:12px;border-radius:6px;border:1px solid var(--asd-line);background:var(--asd-surface);color:var(--dsw-alias-label-primary);}",
-  ".asd-setMsg{font-size:11px;min-height:14px;color:var(--dsw-alias-state-success-primary);}",
-  ".asd-setText{height:64px;}",
       "color:var(--dsw-alias-label-primary);font-size:13px;line-height:1.55;",
-      // 主题里只有 error / warn / business / success 四种状态色，「排比」和「模型复审」
-      // 如果都用 business 就分不出来，这里用 color-mix 各调一个可辨识的色相。
       "--asd-c-parallel:color-mix(in srgb,var(--dsw-alias-state-business-primary) 55%,var(--dsw-alias-state-error-primary));",
       "--asd-c-semantic:color-mix(in srgb,var(--dsw-alias-state-business-primary) 52%,var(--dsw-alias-state-success-primary));",
-      // This panel is transparent: the sidebar fill shows through. bg-layer-1 / bg-layer-2 are
-      // defined relative to each other, not to that fill, so on a light theme they land almost
-      // exactly on the panel and every card, input and tile dissolves into it.
-      // Derive surfaces and lines from the label colour instead: the light theme tints darker,
-      // the dark theme tints lighter, so a block keeps a visible edge on both.
       "--asd-surface:color-mix(in srgb,var(--dsw-alias-label-primary) 5%,transparent);",
       "--asd-surface-2:color-mix(in srgb,var(--dsw-alias-label-primary) 8%,transparent);",
       "--asd-line:color-mix(in srgb,var(--dsw-alias-label-primary) 14%,transparent);",
       "--asd-line-strong:color-mix(in srgb,var(--dsw-alias-label-primary) 24%,transparent);}",
+      ".asd-settings{display:flex;flex-direction:column;gap:12px;padding:2px 0 40px;max-width:820px;",
+      "--asd-surface:color-mix(in srgb,var(--dsw-alias-label-primary) 5%,transparent);--asd-surface-2:color-mix(in srgb,var(--dsw-alias-label-primary) 8%,transparent);--asd-line:color-mix(in srgb,var(--dsw-alias-label-primary) 14%,transparent);--asd-line-strong:color-mix(in srgb,var(--dsw-alias-label-primary) 24%,transparent);}",
+      ".asd-setHead{display:flex;flex-direction:column;gap:3px;padding:0 2px 2px;}",
+      ".asd-setTitle{margin:0;font-size:15px;font-weight:600;letter-spacing:.01em;color:var(--dsw-alias-label-primary);}",
+      ".asd-setHint{margin:0;font-size:11px;line-height:1.6;color:var(--dsw-alias-label-tertiary);}",
+      ".asd-setCard{border:1px solid var(--asd-line);border-radius:10px;background:var(--asd-surface);overflow:hidden;}",
+      ".asd-setCardHead{display:flex;align-items:center;gap:8px;padding:7px 13px;background:var(--asd-surface-2);border-bottom:1px solid var(--asd-line);}",
+      ".asd-setCardTitle{font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--dsw-alias-label-secondary);}",
+      ".asd-setCardBody{display:flex;flex-direction:column;}",
+      ".asd-setRow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:3px 18px;padding:10px 13px;}",
+      ".asd-setRow+.asd-setRow{border-top:1px solid var(--asd-line);}",
+      ".asd-setRow[data-stack=true]{grid-template-columns:minmax(0,1fr);align-items:stretch;gap:7px;}",
+      ".asd-setInfo{min-width:0;display:flex;flex-direction:column;gap:2px;}",
+      ".asd-setLabel{font-size:12px;font-weight:500;line-height:1.5;color:var(--dsw-alias-label-primary);}",
+      ".asd-setRow .asd-setHint{font-size:10.5px;line-height:1.55;}",
+      ".asd-setBody{display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:0;}",
+      ".asd-setBody[data-wide=true]{align-items:stretch;}",
+      ".asd-setBody .asd-chips{justify-content:flex-end;}",
+      ".asd-setBody[data-wide=true] .asd-chips{justify-content:flex-start;}",
+      ".asd-schip{flex:0 0 auto;height:26px;padding:0 11px;border-radius:8px;font-size:11.5px;cursor:pointer;",
+      "border:1px solid var(--asd-line-strong);background:transparent;color:var(--dsw-alias-label-secondary);}",
+      ".asd-schip:hover{border-color:var(--dsw-alias-label-tertiary);color:var(--dsw-alias-label-primary);}",
+      ".asd-schip[data-on=true]{border-color:transparent;background:var(--dsw-alias-button-primary-fill);",
+      "color:var(--dsw-alias-label-primary-inverted);font-weight:600;}",
+      ".asd-schip:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:1px;}",
+      ".asd-schip[disabled]{opacity:.4;cursor:default;}",
+      ".asd-setNum{width:60px;height:26px;padding:0 6px;font:inherit;font-size:12px;text-align:center;border-radius:7px;border:1px solid var(--asd-line);background:var(--asd-surface);color:var(--dsw-alias-label-primary);}",
+      ".asd-setNum:focus{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:1px;}",
+      ".asd-setMsg{font-size:11px;min-height:14px;margin:0;color:var(--dsw-alias-state-success-primary);}",
+      ".asd-setText{height:62px;width:100%;box-sizing:border-box;background:var(--asd-surface);}",
+      ".asd-settings .asd-chip{height:24px;padding:0 10px;border-radius:8px;font-size:11px;}",
+      ".asd-settings .asd-btn{height:26px;border-radius:8px;}",
+      ".asd-settings .asd-chip[data-on=true]{border-color:transparent;background:color-mix(in srgb,var(--dsw-alias-label-primary) 12%,transparent);color:var(--dsw-alias-label-tertiary);text-decoration:line-through;text-decoration-color:var(--dsw-alias-label-tertiary);}",
       ".asd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}",
       ".asd-title{margin:0;font-size:14px;font-weight:600;letter-spacing:.01em;}",
       ".asd-sub{margin:2px 0 0;font-size:11px;color:var(--dsw-alias-label-tertiary);}",
@@ -3094,7 +3123,6 @@ window.__ModuleLoader__.load({
       ".asd-dim[data-tone=mid] .asd-dimBar>i{background:var(--dsw-alias-state-warn-primary);}",
       ".asd-dim[data-tone=high] .asd-dimBar>i{background:var(--dsw-alias-state-error-primary);}",
       ".asd-dimHint{font-size:10px;color:var(--dsw-alias-label-tertiary);}",
-      // 七个页签在窄侧栏里一行排不下：允许换行，否则整排撑出面板
       ".asd-seg{display:flex;flex-wrap:wrap;gap:2px;padding:2px;border-radius:10px;",
       "background:color-mix(in srgb,var(--dsw-alias-label-primary) 8%,transparent);}",
       ".asd-segBtn{flex:1 1 auto;height:26px;padding:0 8px;border:0;border-radius:8px;cursor:pointer;background:transparent;",
@@ -3106,7 +3134,6 @@ window.__ModuleLoader__.load({
       "border:1px solid var(--asd-line);background:var(--asd-surface);",
       "max-height:38vh;overflow-y:auto;line-height:1.85;flex:0 0 auto;min-height:72px;}",
       ".asd-annotWrap{display:flex;flex-direction:column;gap:6px;flex:0 0 auto;}",
-      // 从句长节奏 / 段落热力跳过来的目标区间：整行浅色底 + 左侧竖条
       ".asd-annot [data-focus=true]{background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 22%,transparent);",
       "box-shadow:-2px 0 0 0 var(--dsw-alias-state-business-primary);}",
       ".asd-keys{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;padding:0 2px;",
@@ -3158,10 +3185,10 @@ window.__ModuleLoader__.load({
       ".asd-quote{font-size:11px;color:var(--dsw-alias-label-tertiary);word-break:break-all;}",
       ".asd-advice{font-size:12px;color:var(--dsw-alias-label-secondary);line-height:1.6;}",
       ".asd-cmpRow[data-jump=true]:hover{background:color-mix(in srgb,var(--dsw-alias-label-primary) 7%,transparent);}",
-    ".asd-cmpRow[data-jump=true]:hover .asd-cmpGo{opacity:1;}",
-    ".asd-cmpRow[data-jump=true]:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:1px;}",
-    ".asd-cmpGo{font-style:normal;font-size:9px;margin-left:3px;opacity:.45;color:var(--dsw-alias-state-business-primary);}",
-    ".asd-cmp{display:flex;flex-direction:column;gap:4px;padding:6px 8px;border-radius:8px;",
+      ".asd-cmpRow[data-jump=true]:hover .asd-cmpGo{opacity:1;}",
+      ".asd-cmpRow[data-jump=true]:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:1px;}",
+      ".asd-cmpGo{font-style:normal;font-size:9px;margin-left:3px;opacity:.45;color:var(--dsw-alias-state-business-primary);}",
+      ".asd-cmp{display:flex;flex-direction:column;gap:4px;padding:6px 8px;border-radius:8px;",
       "background:var(--asd-surface-2);border:1px solid var(--asd-line);}",
       ".asd-cmpRow{display:flex;gap:6px;align-items:baseline;font-size:11px;line-height:1.6;}",
       ".asd-cmpTag{flex:0 0 auto;min-width:28px;font-size:10px;font-weight:600;color:var(--dsw-alias-label-tertiary);}",
@@ -3171,7 +3198,7 @@ window.__ModuleLoader__.load({
       "text-decoration-thickness:1px;text-underline-offset:2px;}",
       ".asd-cmpSoft{background:transparent;color:var(--dsw-alias-label-primary);border-bottom:1px dashed var(--dsw-alias-label-tertiary);}",
       ".asd-cmpMuted{color:var(--dsw-alias-label-tertiary);font-style:italic;}",
-    ".asd-cmpRow[data-jump=true]{cursor:pointer;margin:-2px -4px;padding:2px 4px;border-radius:6px;}",
+      ".asd-cmpRow[data-jump=true]{cursor:pointer;margin:-2px -4px;padding:2px 4px;border-radius:6px;}",
       ".asd-topRank{font-size:11px;font-weight:700;color:var(--dsw-alias-label-tertiary);}",
       ".asd-topDelta{font-size:11px;font-weight:700;color:var(--dsw-alias-state-success-primary);}",
       ".asd-topDims{font-size:10px;color:var(--dsw-alias-label-tertiary);margin-left:auto;}",
@@ -3331,7 +3358,7 @@ window.__ModuleLoader__.load({
       ".asd-pfFix{color:var(--dsw-alias-state-success-primary);font-weight:600;}",
       ".asd-pfWhy{margin-left:6px;font-size:10px;color:var(--dsw-alias-label-tertiary);}",
       ".asd-pfSum{font-size:11px;color:var(--dsw-alias-label-tertiary);}",
-      "@keyframes asdPulse{0%,100%{opacity:.3;}50%{opacity:1;}}"
+      "@keyframes asdPulse{0%,100%{opacity:.3;}50%{opacity:1;}}",
     ].join("");
 
     /* ------------------------------------------------------------------ *
@@ -3543,12 +3570,12 @@ window.__ModuleLoader__.load({
         flash(got.length ? t("已导入：") + got.join(" · ") : t("这份配置里没有可识别的设置"));
       };
 
-      var chipRow = function (items, cur, onPick, mark) {
+      var chipRow = function (items, cur, onPick, mark, cls) {
         return h("div", { className: "asd-chips" }, items.map(function (it) {
           var own = {};
           own.key = it.id;
           own.type = "button";
-          own.className = "asd-chip";
+          own.className = cls || "asd-chip";
           own[mark] = it.id;
           own["data-on"] = String(cur === it.id);
           own.onClick = function () { onPick(it.id); };
@@ -3573,21 +3600,35 @@ window.__ModuleLoader__.load({
       if (ignore && ignore.dims) for (dk in ignore.dims) { if (ignore.dims[dk]) ignoredDimN++; }
       if (ignore && ignore.items) for (ik in ignore.items) { if (ignore.items[ik]) ignoredItemN++; }
 
-      return h("div", { className: "asd-settings" },
-        h("h2", { className: "asd-setTitle" }, t(TAB_TITLE)),
-        h("p", { className: "asd-setHint" }, t("这里的设置和右侧栏面板共用同一份，改哪边都立刻生效。")),
+      // 设置页的排法：分组卡片 + 「左边名字与解释 / 右边控件」。文本域这类宽控件改成上下堆叠。
+      // 原来是一行行小按钮夹在灰字中间，扫起来分不清哪段在说哪一项。
+      var setRow = function (label, hint, control, stack) {
+        var kids = Array.isArray(control) ? control : [control];
+        return h("div", { className: "asd-setRow", "data-stack": stack ? "true" : undefined },
+          h("div", { className: "asd-setInfo" },
+            h("div", { className: "asd-setLabel" }, label),
+            hint ? h("p", { className: "asd-setHint" }, hint) : null
+          ),
+          h.apply(null, ["div", { className: "asd-setBody", "data-wide": stack ? "true" : undefined }].concat(kids))
+        );
+      };
+      var setCard = function (title, rows) {
+        return h("section", { className: "asd-setCard" },
+          h("div", { className: "asd-setCardHead" }, h("span", { className: "asd-setCardTitle" }, title)),
+          h.apply(null, ["div", { className: "asd-setCardBody" }].concat(rows))
+        );
+      };
 
-        h("div", { className: "asd-setRow" },
-          h("span", { className: "asd-setLabel" }, t("文体")),
-          h("div", { className: "asd-setBody" },
-            chipRow(Object.keys(MODES).map(function (k) { return { id: k, label: t(MODES[k].label) }; }), mode, pickMode, "data-mode"),
-            h("p", { className: "asd-setHint" }, t("通用适合说明、议论、公文；网文适合小说正文与对白。两种文体用的是不同的词表和权重。"))
-          )
+      return h("div", { className: "asd-settings" },
+        h("div", { className: "asd-setHead" },
+          h("h2", { className: "asd-setTitle" }, t(TAB_TITLE)),
+          h("p", { className: "asd-setHint" }, t("这里的设置和右侧栏面板共用同一份，改哪边都立刻生效。"))
         ),
 
-        h("div", { className: "asd-setRow" },
-          h("span", { className: "asd-setLabel" }, t("目标分")),
-          h("div", { className: "asd-setBody" },
+        setCard(t("写作"), [
+          setRow(t("文体"), t("通用适合说明、议论、公文；网文适合小说正文与对白。两种文体用的是不同的词表和权重。"),
+            chipRow(Object.keys(MODES).map(function (k) { return { id: k, label: t(MODES[k].label) }; }), mode, pickMode, "data-mode", "asd-schip")),
+          setRow(t("目标分"), t("达到这个分数就算过关，面板上的环会变绿。"),
             h("div", { className: "asd-chips" },
               h("input", {
                 type: "number",
@@ -3602,122 +3643,85 @@ window.__ModuleLoader__.load({
                 return h("button", {
                   key: "t" + v,
                   type: "button",
-                  className: "asd-chip",
+                  className: "asd-schip",
                   "data-preset": String(v),
                   "data-on": String(tgt === v),
                   onClick: function () { setTgtV(v); saveTarget(v); }
                 }, String(v));
               })
-            ),
-            h("p", { className: "asd-setHint" }, t("达到这个分数就算过关，面板上的环会变绿。"))
-          )
-        ),
+            )),
+          setRow(t("不计分的项"), t("点亮表示这一项不参与打分、也不再提示。适合你的文体用不上某一项时。"),
+            h("div", { className: "asd-chips" }, dimChips), true)
+        ]),
 
-        h("div", { className: "asd-setRow" },
-          h("span", { className: "asd-setLabel" }, t("界面语言")),
-          h("div", { className: "asd-setBody" },
-            chipRow(
-              [{ id: "auto", label: t("跟随系统") }, { id: "zh", label: "中文" }, { id: "en", label: "English" }],
-              langPref, pickLang, "data-lang"
-            )
-          )
-        ),
-
-        h("div", { className: "asd-setRow" },
-          h("span", { className: "asd-setLabel" }, t("标注字号")),
-          h("div", { className: "asd-setBody" },
+        setCard(t("界面"), [
+          setRow(t("界面语言"), t("默认跟随 DSH 的语言设置。"),
+            chipRow([{ id: "auto", label: t("跟随系统") }, { id: "zh", label: "中文" }, { id: "en", label: "English" }], langPref, pickLang, "data-lang", "asd-schip")),
+          setRow(t("标注字号"), t("只影响「标注」页里正文的字号。"),
             h("div", { className: "asd-chips" },
               h("button", {
-                type: "button", className: "asd-chip", "data-step": "down",
+                type: "button", className: "asd-schip", "data-step": "down",
                 disabled: fontIdx <= 0,
                 onClick: function () { if (fontIdx > 0) { setFontIdx(fontIdx - 1); saveFontScale(fontIdx - 1); } }
               }, "A-"),
               h("span", { className: "asd-setHint" }, FONT_PX[fontIdx] + " px"),
               h("button", {
-                type: "button", className: "asd-chip", "data-step": "up",
+                type: "button", className: "asd-schip", "data-step": "up",
                 disabled: fontIdx >= FONT_PX.length - 1,
                 onClick: function () { if (fontIdx < FONT_PX.length - 1) { setFontIdx(fontIdx + 1); saveFontScale(fontIdx + 1); } }
               }, "A+")
-            )
-          )
-        ),
+            ))
+        ]),
 
-        h("div", { className: "asd-setRow" },
-          h("span", { className: "asd-setLabel" }, t("自动复审")),
-          h("div", { className: "asd-setBody" },
+        setCard(t("复审"), [
+          setRow(t("自动复审"), t("自动复审会调用一次模型，需要花一点额度；关掉之后完全离线也能用本地规则。"),
             h("div", { className: "asd-chips" },
               h("button", {
-                type: "button", className: "asd-chip", "data-auto": "on", "data-on": String(!!auto),
+                type: "button", className: "asd-schip", "data-auto": "on", "data-on": String(!!auto),
                 onClick: function () { setAutoV(true); saveAuto(true); }
               }, t("停笔后自动复审")),
               h("button", {
-                type: "button", className: "asd-chip", "data-auto": "off", "data-on": String(!auto),
+                type: "button", className: "asd-schip", "data-auto": "off", "data-on": String(!auto),
                 onClick: function () { setAutoV(false); saveAuto(false); }
               }, t("只在手动点的时候复审"))
-            ),
-            h("p", { className: "asd-setHint" }, t("自动复审会调用一次模型，需要花一点额度；关掉之后完全离线也能用本地规则。"))
-          )
-        ),
+            ))
+        ]),
 
-        h("div", { className: "asd-setRow" },
-          h("span", { className: "asd-setLabel" }, t("不计分的项")),
-          h("div", { className: "asd-setBody" },
-            h("div", { className: "asd-chips" }, dimChips),
-            h("p", { className: "asd-setHint" }, t("点亮表示这一项不参与打分、也不再提示。适合你的文体用不上某一项时。"))
-          )
-        ),
-
-        h("div", { className: "asd-setRow" },
-          h("span", { className: "asd-setLabel" }, t("自定义词表")),
-          h("div", { className: "asd-setBody" },
+        setCard(t("词表"), [
+          setRow(t("黑名单"), t("这些词一出现就算套话。一行一条。"),
             h("textarea", {
               className: "asd-optInput asd-setText",
               value: (custom && custom.deny ? custom.deny.join("\n") : ""),
-              placeholder: t("黑名单：这些词一出现就算套话"),
+              placeholder: t("一行一条"),
               "aria-label": t("黑名单"),
               onChange: function (e) { editList("deny", e.target.value); }
-            }),
+            }), true),
+          setRow(t("白名单"), t("这些词永远不算问题。一行一条。"),
             h("textarea", {
               className: "asd-optInput asd-setText",
               value: (custom && custom.allow ? custom.allow.join("\n") : ""),
-              placeholder: t("白名单：这些词永远不算问题"),
+              placeholder: t("一行一条"),
               "aria-label": t("白名单"),
               onChange: function (e) { editList("allow", e.target.value); }
-            })
-          )
-        ),
-
-        h("div", { className: "asd-setRow" },
-          h("span", { className: "asd-setLabel" }, t("自定义错字表")),
-          h("div", { className: "asd-setBody" },
+            }), true),
+          setRow(t("自定义错字表"), t("固定表里没有的词自己补。同一条错词以这里为准。"),
             h("textarea", {
               className: "asd-optInput asd-setText",
               value: pairsText(typos),
-              placeholder: t("一行一条，写成 错→对"),
+              placeholder: t("写成 错→对，一行一条"),
               "aria-label": t("自定义错字表"),
               onChange: function (e) { var next = parsePairs(e.target.value); setTyposV(next); saveTypos(next); }
-            }),
-            h("p", { className: "asd-setHint" }, t("固定表里没有的词自己补。同一条错词以这里为准。"))
-          )
-        ),
+            }), true)
+        ]),
 
-        h("div", { className: "asd-setRow" },
-          h("span", { className: "asd-setLabel" }, t("已忽略")),
-          h("div", { className: "asd-setBody" },
-            h("p", { className: "asd-setHint" }, t("已忽略的项") + " " + ignoredDimN + " · " + t("已忽略的条目") + " " + ignoredItemN),
-            h("div", { className: "asd-chips" },
-              h("button", {
-                type: "button", className: "asd-btn",
-                disabled: ignoredDimN + ignoredItemN === 0,
-                onClick: restoreAll
-              }, t("全部恢复"))
-            )
-          )
-        ),
-
-        h("div", { className: "asd-setRow" },
-          h("span", { className: "asd-setLabel" }, t("配置备份")),
-          h("div", { className: "asd-setBody" },
+        setCard(t("维护"), [
+          setRow(t("已忽略"), t("已忽略的项") + " " + ignoredDimN + " · " + t("已忽略的条目") + " " + ignoredItemN,
+            h("button", {
+              type: "button", className: "asd-btn",
+              disabled: ignoredDimN + ignoredItemN === 0,
+              onClick: restoreAll
+            }, t("全部恢复"))),
+          setRow(t("配置备份"), t("只搬设置，不搬正文。导出后可以复制走，换机器时粘回来点「导入」。"), [
             h("div", { className: "asd-chips" },
               h("button", { type: "button", className: "asd-btn", "data-cfg": "export", onClick: exportCfg }, t("导出")),
               h("button", { type: "button", className: "asd-btn", "data-cfg": "import", onClick: importCfg }, t("导入"))
@@ -3730,8 +3734,8 @@ window.__ModuleLoader__.load({
               onChange: function (e) { setCfg(e.target.value); }
             }),
             h("p", { className: "asd-setMsg" }, msg || "")
-          )
-        )
+          ], true)
+        ])
       );
     }
 

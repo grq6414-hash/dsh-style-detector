@@ -144,7 +144,7 @@ Table rows are clickable: load that chapter into the editor and jump to Diagnose
 6. **Config backup** — export/import genre, target, font size, word lists, ignore list
 7. **Swap review model** — click the model name under the title to pick from your bound providers
 8. **Switch UI language** — "Follow system / 中文 / English" in the options panel, applied instantly (and included in the config backup)
-9. **Settings page** — DSH settings now has an "AI style check" section with everything the sidebar can change; both share the same storage, so a change in one updates the other
+9. **Settings page** — DSH settings now has an "AI style check" section in five groups (Writing / Interface / Review / Word lists / Maintenance) with everything the sidebar can change; both share the same storage, so a change in one updates the other
 10. **Custom typo list** — add misspellings the built-in table lacks, one `wrong→right` per line; your entry wins over the built-in one
 11. **Long texts** — past 20k characters the panel shows "long text · delayed scoring", and the Priority tab switches to weight-based estimation instead of recomputing every sentence
 
