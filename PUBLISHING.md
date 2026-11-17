@@ -55,7 +55,7 @@ git push
 
 ### 方式 A：发 npm ✅ 已完成
 
-已发布：`dsh-style-detector@0.1.1` → <https://www.npmjs.com/package/dsh-style-detector>
+已发布：`dsh-style-detector@0.2.0`（0.1.0 起的每个版本都在） → <https://www.npmjs.com/package/dsh-style-detector>
 
 ```bash
 npm login                      # 首次需要；开了 2FA 的账号建议直接用 Automation Token
@@ -80,7 +80,7 @@ cordis.patch.yml  icon.svg  index.js  locale/en.json  locale/zh.json  package.js
 1. 改 `package.json` 的 `version`
 2. 在 `CHANGELOG.md` 顶部加一节
 3. `npm publish`
-4. `git tag v0.1.1 && git push --tags`
+4. `git tag v0.2.0 && git push --tags`
 
 > **首次发布会看到 `0.0.0-stage`**：registry 会先建一个占位版本并进入自动审核。
 > 审核通过后 `latest` 自动指向正式版本（这次大约 2 分钟）。看到占位版本不用管。
@@ -92,15 +92,15 @@ cordis.patch.yml  icon.svg  index.js  locale/en.json  locale/zh.json  package.js
 ---
 ### 方式 B：只发 GitHub Release（不需要 npm 账号）✅ 已完成
 
-v0.1.0 的 release 已经建好，`.tgz` 已上传：
+v0.2.0 的 release 已经建好，`.tgz` 已上传：
 
-- Release 页：<https://github.com/grq6414-hash/dsh-style-detector/releases/tag/v0.1.0>
-- 直链：https://github.com/grq6414-hash/dsh-style-detector/releases/download/v0.1.0/dsh-style-detector-0.1.0.tgz
+- Release 页：<https://github.com/grq6414-hash/dsh-style-detector/releases/tag/v0.2.0>
+- 直链：https://github.com/grq6414-hash/dsh-style-detector/releases/download/v0.2.0/dsh-style-detector-0.2.0.tgz
 
 别人这样装：
 
 ```bash
-dsh plugin add https://github.com/grq6414-hash/dsh-style-detector/releases/download/v0.1.0/dsh-style-detector-0.1.0.tgz
+dsh plugin add https://github.com/grq6414-hash/dsh-style-detector/releases/download/v0.2.0/dsh-style-detector-0.2.0.tgz
 ```
 
 以后发新版：
