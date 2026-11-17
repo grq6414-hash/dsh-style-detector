@@ -124,18 +124,29 @@ Drop or pick a `.txt`, auto-split on "第 N 章" headings, and get a per-chapter
 
 Table rows are clickable: load that chapter into the editor and jump to Diagnose.
 
-## Ten small conveniences
+## Shortcuts
 
-1. **Ctrl/⌘ + Enter** — review immediately (skip the auto delay)
-2. **Ctrl/⌘ + Z** — undo the last "replace all" or typo fix (one step)
-3. **Esc** — close the zoom editor or the options panel
-4. **Zoom** — expand the editor to full screen
-5. **Target score** — set one (default 30, presets 25/30/36); the ring turns green when met
-6. **Custom word lists** — add your own tics to the deny list, kill false positives with the allow list
-7. **Excluded dimensions** — turn off a dimension you do not care about; remaining weights renormalise
-8. **Copy report** — export a Markdown report (score, dimension table, top sentences)
-9. **Config backup** — export/import genre, target, font size, word lists, ignore list
-10. **Swap review model** — click the model name under the title to pick from your bound providers
+| Key | What it does |
+| --- | --- |
+| **Ctrl/⌘ + Enter** | Review right now, without waiting for the automatic trigger |
+| **Alt + 1…8** | Jump to tab N (Diagnose → Mark → Suggest → Typos → History → Priority → Compare → Batch). Works while typing in the manuscript box |
+| **Ctrl/⌘ + Z** | Undo the last "replace original" or "fix typo" (one step). Inside an input the browser's own text undo still applies |
+| **Esc** | Close the expanded editor, press again to collapse the options panel |
+| **Tab / Enter / Space** | Sentence bars, paragraph heat cells, batch rows and tabs are all focusable — tab to one and press Enter or Space |
+
+## Eleven small conveniences
+
+1. **Zoom** — expand the editor to full screen
+2. **Target score** — set one (default 30, presets 25/30/36); the ring turns green when met
+3. **Custom word lists** — add your own tics to the deny list, kill false positives with the allow list
+4. **Excluded dimensions** — turn off a dimension you do not care about; remaining weights renormalise
+5. **Copy report** — export a Markdown report (score, dimension table, top sentences)
+6. **Config backup** — export/import genre, target, font size, word lists, ignore list
+7. **Swap review model** — click the model name under the title to pick from your bound providers
+8. **Switch UI language** — "Follow system / 中文 / English" in the options panel, applied instantly (and included in the config backup)
+9. **Settings page** — DSH settings now has an "AI style check" section with everything the sidebar can change; both share the same storage, so a change in one updates the other
+10. **Custom typo list** — add misspellings the built-in table lacks, one `wrong→right` per line; your entry wins over the built-in one
+11. **Long texts** — past 20k characters the panel shows "long text · delayed scoring", and the Priority tab switches to weight-based estimation instead of recomputing every sentence
 
 ## Known limits (please read)
 
@@ -148,7 +159,6 @@ Table rows are clickable: load that chapter into the editor and jump to Diagnose
 
 **Fixable but not yet fixed**:
 
-- The English UI is partial (`locale/en.json` has only title and description; panel strings are Chinese)
 - Terminology detection is bigram-based rather than true word segmentation, so extremely technical text can still read as slightly harsh
 
 **Suggested usage**: treat it as a pre-edit mechanical screening. Aim under 30, focusing on parallel structure, vague imagery and paraphrase repetition; stop chasing once you are under 25 (it starts hurting the prose); leave the rest to three human questions — does this chapter move the story? do the characters sound different from each other? does the ending make you want the next chapter?
@@ -168,6 +178,8 @@ Everything lives in local browser `localStorage`, all keys prefixed `dsh.style-d
 | `v2.v1` | Second version text on the Compare tab |
 | `font.v1` | Mark tab font step (0–3, default 1) |
 | `model.v1` | Chosen review model (`{provider, model}`; empty = follow default) |
+| `lang.v1` | UI language (`auto` / `zh` / `en`; absent = follow system) |
+| `typos.v1` | Custom typo list (`[[wrong, right], …]`, merged with the built-in table) |
 
 **Only the local rule engine is offline.** Pressing "review" or "typo scan" sends the text to whichever provider you bound in DSH — your own configuration, your own explicit action. Turn off auto-review (the checkbox in the status bar) if you do not want that.
 
@@ -178,6 +190,8 @@ git clone https://github.com/grq6414-hash/dsh-style-detector.git
 cd dsh-style-detector
 # no build step — client.js is plain hand-written CJS, index.js is a host ESM plugin
 ```
+
+UI strings are translated in one place: `h()` wraps `React.createElement`, and the dictionaries are `EN` / `EN_RULES` keyed by **the Chinese source string** — a new string needs no `t()` call, it is translated as soon as it is drawn with `h()`. Anything missing falls back to Chinese rather than showing an empty string.
 
 The split:
 

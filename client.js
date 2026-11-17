@@ -10,7 +10,454 @@ window.__ModuleLoader__.load({
   id: "dsh-style-detector",
   factory: function (require) {
     var React = require("react");
-    var h = React.createElement;
+    // ---------- i18n ----------
+    // 界面语言跟随 DSH 的语言设置（locale 服务的 active 值），也可以用设置里的
+    // 「界面语言」强制指定。译文表以中文原文为键：查不到就原样返回中文，
+    // 所以新增文案忘了翻译时界面只会退回中文，不会显示成空字符串或占位符。
+    var LANG_KEY = "dsh.style-detector.lang.v1";
+    // 英文译文表。键是中文原文（源码里怎么写就怎么用），值是英文。
+    // 只放界面文案；用户正文、模型返回的内容不在这里，也不会被翻译。
+    var EN = {
+      "视图": "Views",
+      "Alt+4 · 错字是文本对错，跟 AI 味分数无关，所以单开一页": "Alt+4 · Typos are a correctness check, not part of the AI-flavor score, so they get their own page",
+      "正文": "Manuscript",
+      "AI 味": "AI flavor",
+      "字数太少，先多写两句": "Too few characters — write a couple more lines first",
+    "自定义错字表": "Custom typo list", "收起错字表": "Hide typo list", "固定表之外，自己再补几条": "Add your own entries on top of the built-in list", "一行一条，写成 错→对": "One per line, as wrong→right", "固定表里没有的词自己补。同一条错词以这里为准。": "Add words the built-in list misses. Your entry wins for the same wrong word.", "自定义错字表": "Custom typo list", "AI 文风检测器": "AI style detector",
+      "这里的设置和右侧栏面板共用同一份，改哪边都立刻生效。": "These settings are the same ones the right-sidebar panel uses — changing either applies immediately.",
+      "通用适合说明、议论、公文；网文适合小说正文与对白。两种文体用的是不同的词表和权重。": "General fits exposition, argument and official prose; Web fiction fits novel narrative and dialogue. The two use different word lists and weights.",
+      "达到这个分数就算过关，面板上的环会变绿。": "Reaching this score counts as passing; the ring in the panel turns green.",
+      "停笔后自动复审": "Review automatically after you stop typing",
+      "只在手动点的时候复审": "Only review when I click",
+      "自动复审会调用一次模型，需要花一点额度；关掉之后完全离线也能用本地规则。": "Automatic review calls the model once and spends a little quota; with it off, the local rules still work fully offline.",
+      "点亮表示这一项不参与打分、也不再提示。适合你的文体用不上某一项时。": "Lit means this dimension neither scores nor warns — useful when a dimension does not apply to your genre.",
+      "黑名单：这些词一出现就算套话": "Blocklist: any of these words counts as template phrasing",
+      "白名单：这些词永远不算问题": "Allowlist: these words never count as a problem",
+      "已忽略的项": "Ignored dimensions",
+      "已忽略的条目": "Ignored items",
+      "全部恢复": "Restore all",
+      "导出后可以复制走；换机器时粘回来点「导入」": "Copy the export away; paste it back and hit Import on another machine.",
+      "点一下：这一项不算分，也不再提示": "Click to exclude this dimension from scoring and hints",
+      "已生成，请手动复制下面的框": "Generated — copy it from the box below",
+      "已恢复全部忽略项": "All ignored entries restored",
+      "已导入：": "Imported: ",
+      "这份配置里没有可识别的设置": "No recognizable settings in this config",
+      "已导入": "Imported",
+      "标注字号": "Markup font size",
+      "自动复审": "Auto review",
+      "清空": "Clear",
+      "文体": "Genre",
+      "通用": "General",
+      "网文": "Web novel",
+      "放大": "Expand",
+      "自动": "Auto",
+      "复审": "Review",
+      "标注": "Markup",
+      "对比": "Compare",
+      "批量": "Batch",
+      "关闭": "Close",
+      "导出": "Export",
+      "导入": "Import",
+      "重点": "Top",
+      "字号": "Size",
+      "颜色": "Colors",
+      "改写": "Rewrite",
+      "原句": "Original",
+      "改成": "Becomes",
+      "撤销": "Undo",
+      "目标分": "Target",
+      "黑名单": "Blocklist",
+      "白名单": "Allowlist",
+      "字太少": "Too short",
+      "文体模式": "Genre mode",
+      "半人半机": "Half human, half machine",
+      "复制报告": "Copy report",
+      "句式均匀": "Uniform rhythm",
+      "排比结构": "Parallel structure",
+      "词汇重复": "Repetition",
+      "句长节奏": "Sentence rhythm",
+      "段落热力": "Paragraph heat",
+      "跟随默认": "Follow default",
+      "缺画面感": "Vague imagery",
+      "描写重复": "Repeated description",
+      "放大编辑": "Expand editor",
+      "配置备份": "Config backup",
+      "像人写的": "Reads human",
+      "替换原文": "Replace text",
+      "应用改写": "Apply rewrite",
+      "忽略这条": "Ignore this",
+      "分号串句": "Semicolon chain",
+      "模型校对": "Model proofread",
+      "句子太少": "Too few sentences",
+      "自定义词表": "Custom word lists",
+      "AI 套话": "Template phrasing",
+      "连接词密度": "Connective density",
+      "缺具体信息": "Vague content",
+      "句子节奏平": "Flat rhythm",
+      "收起自定义": "Hide custom",
+      "不计分的项": "Excluded dimensions",
+      "还不够判断": "Not enough yet",
+      "已替换原文": "Text replaced",
+      "模型读取中…": "Reading model…",
+      "AI 腔套句": "AI clichés",
+      "复制改写文本": "Copy rewrite",
+      "等待更多文字": "Waiting for more text",
+      "AI 文风检测": "AI style check",
+      "清空文本与结果": "Clear text and results",
+      "越高越像 AI": "Higher means more AI-like",
+      "复审用什么模型": "Review model",
+      "正文字号小一号": "Smaller text",
+      "正文字号大一号": "Larger text",
+      "第二版还是空的": "The second version is still empty",
+      "第二版还是空的。": "The second version is still empty.",
+      "复审改回跟随默认": "Review goes back to the default model",
+      "把第二版载回正文": "Load the second version back",
+      "点一下关闭自动复审": "Turn automatic review off",
+      "正在调用模型复审…": "Calling the model for review…",
+      "用词和句长都自然。": "Wording and rhythm both read naturally.",
+      "本文没有这一类问题": "No problems of this kind",
+      "第一版（左边正文）": "First version (the text on the left)",
+      "用当前正文当第二版": "Use the current text as the second version",
+      "文本太短，无法复审": "Too short to review",
+      "点一下恢复这一项计分": "Restore scoring for this dimension",
+      "选一个 txt 文件": "Choose a .txt file",
+      "已把当前正文放进第二版": "Current text copied into the second version",
+      "复制失败，请手动选择文本": "Copy failed — select the text manually",
+      "这条只给建议，不自动改写": "Advice only, no automatic rewrite",
+      "把第二版载回正文，接着改": "Load the second version back and keep editing",
+      "文本太短，暂无可诊断项。": "Too short for any diagnostics.",
+      "粘贴或输入一段中文文本……": "Paste or type some Chinese text…",
+      "先在上面粘贴一段中文文本。": "Paste some Chinese text above first.",
+      "有机器痕迹，但还没到一眼假。": "Machine traces, but not obviously fake yet.",
+      "每一项都是「AI 味」分数：": "Every dimension is an “AI flavor” score:",
+      "一个小方块一段；越红越像 AI": "One square per paragraph; the redder, the more AI-like",
+      "点一下回「标注」页定位这句原文": "Click to locate this sentence on the Markup page",
+      "每根柱子一句；长短不齐才像人写的": "One bar per sentence; uneven lengths read human",
+      "这一项是全文统计，没有可定位的片段": "Whole-text statistic — no single passage to locate",
+      "在全屏窗口里编辑长文（Esc 关闭）": "Edit long text in a full-screen window (Esc to close)",
+      "这条我确认不改，之后不再出现也不计分": "Confirmed as intended: hidden and no longer scored",
+      "把当前正文复制进第二版框，再在上面改": "Copy the current text into the second box, then edit it there",
+      "分数低只说明没踩这些坑，不等于写得好。": "A low score only means these traps were avoided — it does not mean the writing is good.",
+      "内容实时同步，Esc 或点「关闭」退出": "Content syncs live; press Esc or click Close to leave",
+      "一行一个。这些词即使在内置词表里也不算。": "One per line. These words are never flagged, even if they are on the built-in list.",
+      "描写重复：用词重复不明显，这一项没问题。": "Repetition: no obvious repeated wording — nothing to fix here.",
+      "用设置里的默认模型（与本对话选的模型一致）": "Use the default model from settings (same as the model chosen in this chat)",
+      "一行一个，或逗号隔开。这些词一律当套话算。": "One per line, or comma separated. These words always count as template phrasing.",
+      "自定义词表：黑名单永远算套话，白名单永远不算": "Custom lists: blocklisted words always count, allowlisted words never do",
+      "排比结构：没有明显的排比痕迹，这一项没问题。": "Parallel structure: no obvious parallelism — nothing to fix here.",
+      "本地固定表已经查过一遍，命中的都是确定写错的。": "The local table has already run; everything it found is a certain misspelling.",
+      "粘贴或输入一段中文文本，实时检测「AI 味」……": "Paste or type Chinese text to check its “AI flavor” live…",
+      "把改完的第二版贴在这里，立刻看分数差与修好了哪些": "Paste the revised second version here to see the score gap and what got fixed",
+      "把 .txt 拖到这里，按「第 X 章」自动切分": "Drop a .txt here; chapters split on “第 X 章”",
+      "错字是文本对错，跟 AI 味分数无关，所以单开一页": "Typos are correctness, not style — so they get their own page and never touch the score",
+      "把框里的 JSON 应用回来（会覆盖当前这几项设置）": "Apply the JSON in the box (it overwrites these settings)",
+      "只影响这个面板的复审；本对话的模型还是在输入框下面换。": "Affects this panel's review only; change this chat's model below the input box.",
+      "本地规则打分 · 模型只做语义复审 · 分数始终由本地算": "Local scoring · the model only reviews meaning · the score is always computed locally",
+      "已导入：文体 · 目标分 · 字号 · 词表 · 忽略表": "Imported: genre, target, font size, word lists, ignore list",
+      "通用：说明 · 议论 · 公文（换模式会重算分数并重新复审）": "General: exposition, argument, official prose (switching recomputes and re-reviews)",
+      "网文：正文 · 对白 · 场景（换模式会重算分数并重新复审）": "Web novel: narration, dialogue, scenes (switching recomputes and re-reviews)",
+      "把文体、目标分、字号、词表、忽略表打成一段 JSON 并复制": "Pack genre, target, font size, word lists and the ignore list into JSON and copy it",
+      "没查到写错的字。想更稳一点，点上面「模型校对」再逐句过一遍。": "No misspellings found. For more coverage, run Model proofread above.",
+      "撤销上一次「替换原文」，把正文退回改之前（Ctrl/⌘+Z）": "Undo the last Replace text and restore the text as it was (Ctrl/⌘+Z)",
+      "把分项分数与最该先改的句子拼成一段 Markdown 复制出去": "Build a Markdown summary of the dimension scores and the sentences worth fixing first",
+      "点「导出」会生成一段 JSON；换机器时把它粘到这里，再点「导入」。": "Export produces a JSON snippet; on another machine paste it here and click Import.",
+      "点开从智能体已绑定的模型里挑一个；只影响这个面板的复审，不占用本对话上下文": "Open to pick from the models bound on this machine; affects this panel's review only and does not consume this chat's context",
+      "这一段里没有能靠改写直接降分的句子。剩下的问题（缺细节、句式太齐）得靠加具体内容来解决。": "No sentence here can be fixed by rewriting alone. What remains (thin detail, too-even rhythm) needs more concrete content.",
+      "这一句是在替读者总结，不是让读者看见。比如不写「他很紧张」，写「他把杯沿捏出一圈白印」——情绪藏在动作里。": "This sentence summarises for the reader instead of showing them. Instead of “he was nervous”, write “he pressed a white ring into the rim of the cup” — put the feeling in an action.",
+      "这一句没有一个能查证的东西。比如「很多人」可以写成「上周三来的三个人」，可信度立刻不一样。": "Nothing in this sentence can be checked. “Many people” can become “the three people who came last Wednesday”, and it reads very differently.",
+      "这几句全是动作，没有一样东西是读者能看见的。挑一个动作停下来，写手碰到的东西、听见的声音，或者让人说一句话。": "These sentences are all movement and nothing the reader can see. Stop on one action and write what the hand touched, what could be heard, or let someone speak.",
+      "挑一个场景让人物开口说一句话，哪怕只有五个字。对白能把叙述拉回现场。": "Pick a scene and let someone say one line, even five words. Dialogue pulls narration back into the room.",
+      "这类句子读者已经见过几千遍，换成一个具体的动作或一个能看见的细节。": "Readers have seen this sentence thousands of times — swap in a concrete action or something visible.",
+      "全都一样长，读起来像列清单。让长短交错，节奏才像人写的。": "Everything is the same length, which reads like a list. Mix long and short so the rhythm sounds human.",
+      "连续几句长度和结构接近，挑一句改成具体叙述或直接删掉。": "Several consecutive sentences share a length and shape; turn one into concrete narration or cut it.",
+      "删掉连接词，句子照样成立，反而更硬。": "Drop the connective — the sentence still holds, and reads firmer.",
+      "这一段用分号把三四个分句串成一句，读起来喘不过气。拆成两三个短句。": "This paragraph chains several clauses with semicolons. Split it into short sentences.",
+      "有分号把三四个分句串成一句，读起来喘不过气。拆成两三个短句。": "Semicolons chain several clauses into one sentence. Split it into short sentences.",
+      "全篇几乎没有具体名词、数字或专名，读起来像概述。每段至少补一个能查证的东西。": "Almost no concrete nouns, numbers or names — it reads like a summary. Add at least one checkable thing per paragraph.",
+      "同一个搭配反复出现，读者会觉得在原地打转。": "The same phrase keeps coming back; the reader feels stuck in place.",
+      "同样的话换着说法又说了一遍，删掉一句会更紧凑。": "The same thing is said twice in different words; cutting one makes it tighter.",
+      "本地规则已打分。点「复审」让大模型指认语义层问题，结论会并进同一份列表。": "Local rules have scored it. Click Review to let the model flag meaning-level problems; findings merge into the same list.",
+      "本地规则已打分，停顿约 1 秒自动做模型复审，结论并入同一份列表。": "Local rules have scored it; about a second after you stop typing the model reviews it and findings merge into the same list.",
+      "模型复审完成：未发现语义层问题。": "Model review finished: no meaning-level problems found.",
+      "模型通读一遍，没再发现别的问题。": "The model read it through and found nothing else.",
+      "还没有检测记录。每次有效检测都会自动记一条，最多保留 30 条。": "No history yet. Every valid check is recorded automatically, keeping the latest 30.",
+      "再输入一些文字（至少 20 字）就能评分。": "Add a bit more text (at least 20 characters) to get a score.",
+      "先输入至少 20 字。": "Type at least 20 characters first.",
+      "先输入一段文字（至少 20 字）。": "Type some text first (at least 20 characters).",
+      "两版里至少有一版字数不够（至少 20 字）。": "At least one version is too short (20 characters minimum).",
+      "达到这个分就显示已达标；建议小说压到 25 以下": "Reaching this score shows as on target; for fiction, aim below 25",
+      "它不是在判断「谁写的」，只是把文本里的机械性痕迹量化出来。": "It does not judge who wrote it — it only quantifies mechanical traces in the text.",
+      "改写后仍可能踩到没被规则覆盖的坑。": "After rewriting, you may still hit traps the rules do not cover.",
+      "本地固定表 + 模型逐句校对，两层都过一遍再上传更稳。": "Local table plus a model pass — run both before uploading.",
+      "文体、目标分、字号、词表、忽略表都在这一份里。": "Genre, target, font size, word lists and the ignore list all live in this snippet.",
+      "界面语言": "Language",
+      "跟随系统": "System",
+      "跟随 DSH 的语言设置": "Follow the language chosen in DSH",
+      "强制用这个语言显示界面": "Always show the interface in this language",
+      "先把导出的配置粘到框里": "Paste an exported config here first",
+      "，0 = 像人写的，100 = 一眼假。总分按权重加权。": " — 0 = reads human, 100 = obviously fake. The total is weighted.",
+      "把 .txt 拖到这里，按「第 X 章」自动切分": "Drop a .txt here; chapters split at “第 X 章” headings"
+    };
+
+    // 片段表：规则命中的结果里若还嵌着这些界面词，就替换掉。
+    // 只收界面词（分项名、按钮名），不收普通词，免得误伤正文。
+    var EN_FRAGMENTS = ["AI 腔套句", "连接词密度", "缺具体信息", "句子节奏平", "排比结构", "句式均匀", "词汇重复", "缺画面感", "描写重复", "AI 套话", "替换原文", "应用改写", "忽略这条", "复制报告", "自定义词表", "模型校对", "文体模式", "目标分", "配置备份", "界面语言"];
+
+    // 动态文案（带数字或变量）用规则表翻译：命中第一条即返回。
+    // 顺序很重要，具体的写在前面，泛化的放最后。
+    var EN_RULES = [
+      [/^诊断 (\d+)$/, "Diagnose $1"],
+      [/^建议 (\d+)$/, "Advice $1"],
+      [/^错字 (\d+)$/, "Typos $1"],
+      [/^记录 (\d+)$/, "History $1"],
+      [/^重点 (\d+)$/, "Top $1"],
+      [/^建议 (\d+) · 忽略 (\d+)$/, "Advice $1 · ignored $2"],
+      [/^还差 (\d+) 分$/, "$1 pts to go"],
+      [/^已达标（低于目标 (\d+) 分）$/, "On target (below $1)"],
+      [/^−(\d+) 分$/, "−$1 pts"],
+      [/^\+(\d+) 分$/, "+$1 pts"],
+      [/^(\d+) 分$/, "$1 pts"],
+      [/^(\d+) 字$/, "$1 chars"],
+      [/^(\d+) 句$/, "$1 sentences"],
+      [/^(\d+) 段$/, "$1 paragraphs"],
+      [/^(\d+) 处$/, "$1 spots"],
+      [/^均句长 (\d+) 字$/, "avg $1 chars"],
+      [/^去重率 (\d+)%$/, "distinct $1%"],
+      [/^把目标分设为 (\d+)$/, "Set target to $1"],
+      [/^可自动改写 (\d+) 处$/, "$1 spots can be auto-rewritten"],
+      [/^已忽略 (\d+) 处：$/, "Ignored $1:"],
+      [/^已忽略 (\d+) 处（不计分、不再提示）：$/, "Ignored $1 (not scored, not shown):"],
+      [/^修好 (\d+) 处$/, "Fixed $1"],
+      [/^新引入 (\d+) 处$/, "New $1"],
+      [/^还在 (\d+) 处$/, "Still there $1"],
+      [/^共 (\d+) 章 · 平均 (\d+)$/, "$1 chapters · average $2"],
+      [/^首章→末章 降 (\d+)$/, "First → last: down $1"],
+      [/^首章→末章 升 (\d+)$/, "First → last: up $1"],
+      [/^最干净 (.+?) (\d+) · 最重 (.+?) (\d+)$/, "Cleanest $1 $2 · Heaviest $3 $4"],
+      [/^第 (\d+) 字$/, "char $1"],
+      [/^第 (\d+–\d+) 句 · 最长 (\d+) 字$/, "sentences $1 · longest $2 chars"],
+      [/^第 (\d+) 句 · (\d+) 字$/, "sentence $1 · $2 chars"],
+      [/^第 (\d+) 段 · (\d+) 字（太短，不评）$/, "paragraph $1 · $2 chars (too short to score)"],
+      [/^第 (\d+) 段 · (\d+) 字 · AI 味 (\d+)$/, "paragraph $1 · $2 chars · AI flavor $3"],
+      [/^句长 (\d+) 字，离散度 ([\d.]+)$/, "sentence length $1 chars, spread $2"],
+      [/^连接词 (\d+) · 破折号 (\d+)$/, "connectives $1 · dashes $2"],
+      [/^连接词 (\d+) · 破折号 (\d+) · 分号串 (\d+) 段$/, "connectives $1 · dashes $2 · semicolon chains $3"],
+      [/^数字 (\d+) · 专名 (\d+) · 时间 (\d+)$/, "numbers $1 · names $2 · times $3"],
+      [/^数字 (\d+) · 专名 (\d+) · 时间 (\d+) · 年份 (\d+)$/, "numbers $1 · names $2 · times $3 · years $4"],
+      [/^对白 (\d+) 段 · 动作 (\d+) · 物件 (\d+) 种 · 感官 (\d+)$/, "dialogue $1 · actions $2 · objects $3 · senses $4"],
+      [/^全文 (\d+) 处套话，删掉后信息量不变。$/, "$1 instances of template phrasing; removing them loses no information."],
+      [/^全文 (\d+) 处套句，换掉后情节不会少一个字。$/, "$1 stock sentences; replacing them loses no plot."],
+      [/^另有 (\d+) 处未逐条列出。$/, "$1 more not listed individually."],
+      [/^还有 (\d+) 处可删。$/, "$1 more can go."],
+      [/^另有 (\d+) 段分号串句。$/, "$1 more semicolon-chained paragraphs."],
+      [/^有 (\d+) 段用分号把三四个分句串成一句。挑一段拆成两三个短句，读起来才不憋。$/, "$1 paragraphs chain several clauses with semicolons. Split one into short sentences."],
+      [/^有 (\d+) 组结构相近的句子，打散其中一组即可。$/, "$1 groups of similarly shaped sentences; break up one group."],
+      [/^全文只有 (\d+) 处具体信息，试着每段补一个。$/, "Only $1 concrete details in the whole text; add one per paragraph."],
+      [/^全文平均每句 (\d+) 字，几乎没有短句。每三句里挑一句压到十个字以内，节奏才有呼吸。$/, "Sentences average $1 characters and there are almost no short ones. Cut one in three to under ten characters so the rhythm can breathe."],
+      [/^模型指出 (\d+) 处语义问题$/, "the model flagged $1 meaning-level problems"],
+      [/^模型未发现语义问题$/, "the model found no meaning-level problems"],
+      [/^模型复审完成：指出 (\d+) 处语义问题，已并入分析。$/, "Model review finished: $1 meaning-level problems merged into the analysis."],
+      [/^模型又指出 (\d+) 处可疑的地方，已按把握大小排好。$/, "The model flagged $1 more suspicious spots, ordered by confidence."],
+      [/^（(\d+) 条对不上原文已丢弃）$/, " ($1 could not be matched to the text and were dropped)"],
+      [/^固定表 (\d+) 处，模型 (\d+) 处$/, "local table $1, model $2"],
+      [/^已读入 (\d+) 章$/, "Loaded $1 chapters"],
+      [/^已应用第 (\d+) 句的改写$/, "Applied the rewrite for sentence $1"],
+      [/^已导入：(.+)$/, "Imported: $1"],
+      [/^复审改用 (.+)$/, "Review switched to $1"],
+      [/^复审失败：(.*)$/, "Review failed: $1"],
+      [/^校对失败：(.*)$/, "Proofread failed: $1"],
+      [/^复审失败（HTTP (\d+)）$/, "Review failed (HTTP $1)"],
+      [/^校对失败（HTTP (\d+)）$/, "Proofread failed (HTTP $1)"],
+      [/^调用模型失败：(.*)$/, "Model call failed: $1"],
+      [/^读取当前模型失败：(.*)（点一下打开列表）$/, "Could not read the current model: $1 (click to open the list)"],
+      [/^模型不可用（(.*)）$/, "Model unavailable ($1)"],
+      [/^已撤销「(.*)」$/, "Undid “$1”"],
+      [/^已载入「(.*)」$/, "Loaded “$1”"],
+      [/^已改成「(.*)」$/, "Changed to “$1”"],
+      [/^已把「(.*)」加进白名单，不再报$/, "Added “$1” to the allowlist; it is no longer flagged"],
+      [/^改成「(.*)」$/, "Change to “$1”"],
+      [/^套句「(.*)」$/, "Cliché “$1”"],
+      [/^套话「(.*)」$/, "Template “$1”"],
+      [/^连接词「(.*)」$/, "Connective “$1”"],
+      [/^长句 (\d+) 字$/, "Long sentence ($1 chars)"],
+      [/^并列句 (\d+) 句$/, "Parallel run ($1 sentences)"],
+      [/^破折号 (\d+) 处$/, "Dashes ($1)"],
+      [/^同义反复「(.*)」$/, "Says the same thing (“$1”)"],
+      [/^「(.*)」重复 (\d+) 次$/, "“$1” repeated $2 times"],
+      [/^点一下去正文里定位这一类问题（共 (\d+) 处，可循环）$/, "Click to locate this kind of problem in the text ($1 spots, cycles)"],
+      [/^点一下定位到本文第一个「(.*)」问题，再点跳下一个（循环）$/, "Click to jump to the first “$1” problem; click again for the next (cycles)"],
+      [/^点一下：「(.*)」这一项不算分，也不再提示（适合你的文体用不上这项时）$/, "Click: exclude “$1” from scoring and hints (useful when this dimension does not apply to your genre)"],
+      [/^第 (\d+) 段 · (\d+) 字 · AI 味 (\d+) · 点一下去标注页定位这一段$/, "Paragraph $1 · $2 chars · AI flavor $3 · click to locate this paragraph on the Markup page"],
+      [/^第 (\d+) 段 · (\d+) 字（太短，不评） · 点一下去标注页定位这一段$/, "Paragraph $1 · $2 chars (too short to score) · click to locate it on the Markup page"],
+      [/^第 (\d+–\d+) 句 · 最长 (\d+) 字 · 点一下去标注页定位$/, "Sentences $1 · longest $2 chars · click to locate them on the Markup page"],
+      [/^第 (\d+) 句 · (\d+) 字 · 点一下去标注页定位$/, "Sentence $1 · $2 chars · click to locate it on the Markup page"],
+      [/^点一下把「(.*)」载入正文，切到诊断页接着改$/, "Click to load “$1” into the editor and continue on the Diagnose page"],
+      [/^点一下回「标注」页定位这句原文$/, "Click to locate this sentence on the Markup page"],
+      [/^首末持平$/, "First and last are level"],
+      [/^AI 味 (\d+)$/, "AI flavor $1"],
+      [/^(.+?)：句长集中在 (\d+) 字附近，让一两句明显更长或更短。$/, "$1: sentences cluster around $2 characters — make one or two clearly longer or shorter."],
+      [/^(.+?)：句长 (\d+) 字，离散度 ([\d.]+)$/, "$1: average $2 characters, spread $3"],
+      [/^(.+?)：没有明显的排比痕迹，这一项没问题。$/, "$1: no obvious parallelism — nothing to fix here."],
+      [/^(.+?)：用词重复不明显，这一项没问题。$/, "$1: no obvious repeated wording — nothing to fix here."],
+      [/^(.+?)：(.+)$/, "$1: $2"],
+      [/^(.+?) · (\d+) 分$/, "$1 · $2 pts"],
+      [/^(.+?) (\d+)$/, "$1 $2"]
+    ];
+
+    function readLang() {
+      try {
+        var v = localStorage.getItem(LANG_KEY);
+        return v === "zh" || v === "en" ? v : "auto";
+      } catch (e) { return "auto"; }
+    }
+    function saveLang(v) {
+      try {
+        if (v === "zh" || v === "en") localStorage.setItem(LANG_KEY, v);
+        else localStorage.removeItem(LANG_KEY);
+      } catch (e) { /* storage unavailable */ }
+      clearTCache();
+      broadcastSettings();
+    }
+
+    var localeSvc = null;
+    var localeListeners = [];
+
+    function htmlLangIsZh() {
+      var lang = "";
+      try {
+        if (typeof document !== "undefined" && document.documentElement) lang = document.documentElement.lang || "";
+        if (!lang && typeof navigator !== "undefined") lang = navigator.language || "";
+      } catch (e) { /* no dom */ }
+      return /^zh\b/i.test(lang);
+    }
+
+    function activeLocaleId() {
+      try {
+        var snap = localeSvc && (typeof localeSvc.getSnapshot === "function" ? localeSvc.getSnapshot() : null);
+        if (!snap && localeSvc && typeof localeSvc.getLocale === "function") snap = localeSvc.getLocale();
+        if (snap && snap.active) return String(snap.active);
+      } catch (e) { /* service gone */ }
+      return htmlLangIsZh() ? "zh" : "en";
+    }
+
+    function currentLang() {
+      var forced = readLang();
+      if (forced === "zh" || forced === "en") return forced;
+      return /^zh\b/i.test(activeLocaleId()) ? "zh" : "en";
+    }
+
+    function interpolate(tpl, params) {
+      if (!params) return tpl;
+      return tpl.replace(/\{(\w+)\}/g, function (m, name) {
+        return params[name] == null ? m : String(params[name]);
+      });
+    }
+
+    var T_CACHE = {};
+    var cacheSize = 0;
+    var T_CACHE_MAX = 4000;
+
+    // 切换语言后必须丢掉旧译文，否则界面会停留在上一个语言。
+    function clearTCache() { T_CACHE = {}; cacheSize = 0; }
+
+    // 取译文：中文原文作键，先查精确表，再按规则表匹配（带数字的文案）。
+    // 两处都查不到就原样返回中文——宁可露出中文，也不要显示成空串或占位符。
+    // 规则命中后，结果里可能还嵌着中文（分项名、按钮名等），再按精确表补一遍。
+    function applyFragments(str) {
+      if (!/[\u4e00-\u9fa5]/.test(str)) return str;
+      var out = str;
+      for (var i = 0; i < EN_FRAGMENTS.length; i++) {
+        var k = EN_FRAGMENTS[i];
+        if (out.indexOf(k) >= 0) out = out.split(k).join(EN[k]);
+      }
+      return out;
+    }
+
+    function translateText(src) {
+      var hit = EN[src];
+      if (typeof hit === "string") return hit;
+      for (var i = 0; i < EN_RULES.length; i++) {
+        if (EN_RULES[i][0].test(src)) return applyFragments(src.replace(EN_RULES[i][0], EN_RULES[i][1]));
+      }
+      return src;
+    }
+
+    function t(src, params) {
+      if (src == null) return src;
+      if (typeof src !== "string" || src === "") return src;
+      var lang = currentLang();
+      if (lang === "zh") return interpolate(src, params);
+      // 缓存键带上语言：切语言后旧条目自然失效，不用清理。
+      var key = lang + "|" + src;
+      var cached = T_CACHE[key];
+      if (cached === undefined) {
+        cached = /[\u4e00-\u9fa5]/.test(src) ? translateText(src) : src;
+        if (cacheSize > T_CACHE_MAX) { T_CACHE = {}; cacheSize = 0; }
+        T_CACHE[key] = cached;
+        cacheSize++;
+      }
+      return interpolate(cached, params);
+    }
+
+    function tChild(child) {
+      if (typeof child === "string") return t(child);
+      if (Array.isArray(child)) {
+        var out = new Array(child.length);
+        for (var i = 0; i < child.length; i++) out[i] = tChild(child[i]);
+        return out;
+      }
+      return child;
+    }
+
+    var T_PROPS = { title: 1, placeholder: 1, "aria-label": 1, "aria-valuetext": 1, alt: 1 };
+
+    function tProps(props) {
+      if (!props) return props;
+      var own = function (o, key) { return Object.prototype.hasOwnProperty.call(o, key); };
+      // 一个元素上可能同时有 aria-label 和 placeholder（例如正文输入框），
+      // 必须全部翻完再返回——曾经写成「命中第一个就 return」，
+      // 结果 placeholder 永远留在中文。
+      var out = null;
+      for (var k in props) {
+        if (!own(props, k)) continue;
+        if (!T_PROPS[k] || typeof props[k] !== "string") continue;
+        var next = t(props[k]);
+        if (next === props[k]) continue;
+        if (!out) {
+          out = {};
+          for (var k2 in props) if (own(props, k2)) out[k2] = props[k2];
+        }
+        out[k] = next;
+      }
+      return out || props;
+    }
+
+    // 唯一的渲染入口：所有静态界面文案在 createElement 这一层统一翻译。
+    // 动态值（用户正文、分数）不会命中译文表，原样透传。
+    var hRaw = React.createElement;
+    function h(tag, props) {
+      var kids = [];
+      for (var i = 2; i < arguments.length; i++) kids.push(tChild(arguments[i]));
+      return hRaw.apply(null, [tag, tProps(props)].concat(kids));
+    }
+
+    function bindLocaleService(svc) {
+      localeSvc = svc || null;
+    }
+
+    function useLangId() {
+      var st = useState(activeLocaleId);
+      var set = st[1];
+      useEffect(function () {
+        var svc = localeSvc;
+        if (!svc || typeof svc.subscribe !== "function") return undefined;
+        var off = svc.subscribe(function () { set(activeLocaleId()); });
+        return typeof off === "function" ? off : undefined;
+      }, []);
+      return st[0];
+    }
+
+    // h 由上面的 function h(...) 提供（会被 t() 翻译的那一层）；这里不能再赋值成 hRaw。
     var useState = React.useState;
     var useEffect = React.useEffect;
     var useMemo = React.useMemo;
@@ -30,6 +477,7 @@ window.__ModuleLoader__.load({
     var DEFAULT_MODE = "general";
     var IGNORE_KEY = "dsh.style-detector.ignore.v1";
     var CUSTOM_KEY = "dsh.style-detector.custom.v1";
+    var TYPO_KEY = "dsh.style-detector.typos.v1";
     var TARGET_KEY = "dsh.style-detector.target.v1";
     var V2_KEY = "dsh.style-detector.v2.v1";
     var DEFAULT_TARGET = 30;
@@ -42,6 +490,12 @@ window.__ModuleLoader__.load({
     var FONT_DEFAULT = 1;
     var TOP_LIMIT = 10;
     var TOP_CANDIDATES = 20;
+    // 超过这个字数算「长文」：几件重活改成打开对应页签时才算，打字时不再每停顿一次全跑一遍。
+    // 2 万字大约是一万多字的正文加缓存，正常一章远到不了这里。
+    var PERF_LONG = 20000;
+    // 「重点」那一页要「真改一遍再重算」，每多一个候选就多跑一次整篇分析，
+    // 超过这个字数就改成按权重估算，否则一万字的章节每停顿一次要卡半秒。
+    var PERF_EST = 6000;
     var EMPTY_IGNORE = { items: {}, dims: {} };
     var EMPTY_CUSTOM = { deny: [], allow: [] };
     // 错字校对是另一件事（文本对错，不是文风），所以单独一条路由
@@ -203,6 +657,8 @@ window.__ModuleLoader__.load({
       }
     };
 
+    // 页签顺序：Alt+1…8 与上方按钮渲染共用这一份，改顺序只改这里
+    var VIEW_KEYS = ["diagnose", "marks", "suggest", "proof", "history", "top", "compare", "batch"];
     var SENT_END = "。！？!?…";
 
     /* ------------------------------------------------------------------ *
@@ -215,8 +671,18 @@ window.__ModuleLoader__.load({
       return String(text || "").replace(/\s/g, "").length;
     }
 
+    // 同一批句子会被好几个维度各自算一遍净字数，逐个正则替换太浪费。
+    // 记忆化到 PLAIN_CACHE（有上限，切文本时不会无限涨）。
+    var PLAIN_CACHE = new Map();
+    var PLAIN_MAX = 6000;
     function plainLen(text) {
-      return String(text || "").replace(/[\s，。！？、；：“”‘’「」『』（）()《》—…·,.;:!?"']/g, "").length;
+      var key = String(text || "");
+      var hit = PLAIN_CACHE.get(key);
+      if (hit !== undefined) return hit;
+      var n = key.replace(/[\s，。！？、；：“”‘’「」『』（）()《》—…·,.;:!?"']/g, "").length;
+      if (PLAIN_CACHE.size >= PLAIN_MAX) PLAIN_CACHE.clear();
+      PLAIN_CACHE.set(key, n);
+      return n;
     }
 
     function toneOf(score) {
@@ -236,14 +702,19 @@ window.__ModuleLoader__.load({
       return { mean: mean, sd: sd, cv: mean > 0 ? sd / mean : 0 };
     }
 
+    // 单趟从前往后拼。原来是从后往前逐条 slice —— 那是 O(条数 × 全文长度)，
+    // 十万字的长篇里每一条替换都要把整篇重新拷一遍，光这一步就能卡住一秒。
     function applyEdits(text, edits) {
-      var list = edits.slice().sort(function (a, b) { return b.start - a.start; });
-      var out = text;
+      if (!edits || !edits.length) return text;
+      var list = edits.slice().sort(function (a, b) { return a.start - b.start || a.end - b.end; });
+      var out = "", at = 0;
       for (var i = 0; i < list.length; i++) {
         var e = list[i];
-        out = out.slice(0, e.start) + e.text + out.slice(e.end);
+        if (typeof e.start !== "number" || typeof e.end !== "number" || e.start < at) continue;
+        out += text.slice(at, e.start) + e.text;
+        at = e.end;
       }
-      return out;
+      return out + text.slice(at);
     }
 
     function splitSentences(text) {
@@ -526,6 +997,90 @@ window.__ModuleLoader__.load({
       return out;
     })();
 
+    // 231 组错配词逐个 text.indexOf 扫全文是 O(词数 × 全文长度)，
+    // 十万字要跑 470ms。改成一条正则一遍扫完（长的放前面，保持「长词优先」）。
+    // 结果与逐词扫描等价：同一个起点只会命中一次，与原来的 seen[at] 去重一致。
+    var TYPO_RIGHT = (function () {
+      var m = Object.create(null), i;
+      for (i = 0; i < TYPO_LIST.length; i++) m[TYPO_LIST[i][0]] = TYPO_LIST[i][1];
+      return m;
+    })();
+    // 自定义错字表：用户自己踩过的坑（「帐号→账号」这类固定表里没有的）
+    // 格式极简：一行一条，「错→对」。也接受 -> = : ， 等分隔，容错优先。
+    function parsePairs(raw) {
+      var text = "";
+      if (Array.isArray(raw)) {
+        var lines = [], i0;
+        for (i0 = 0; i0 < raw.length; i0++) {
+          var it = raw[i0];
+          if (Array.isArray(it)) lines.push(String(it[0] == null ? "" : it[0]) + "→" + String(it[1] == null ? "" : it[1]));
+          else if (it != null) lines.push(String(it));
+        }
+        text = lines.join("\n");
+      } else if (typeof raw === "string") {
+        text = raw;
+      } else {
+        return [];
+      }
+      var rows = text.split(/[\n\r;；]+/), out = [], seen = {}, i;
+      for (i = 0; i < rows.length; i++) {
+        var line = rows[i].replace(/^[\s\u3000]+|[\s\u3000]+$/g, "");
+        if (!line) continue;
+        var m = line.match(/^(.{1,8}?)\s*(?:→|->|=>|=|:|：|,|，|\||\/)\s*(.{1,8})$/);
+        if (!m) continue;
+        var w = m[1].replace(/[\s\u3000]+/g, "");
+        var r = m[2].replace(/[\s\u3000]+/g, "");
+        if (!w || !r || w === r) continue;
+        if (seen[w]) { out[seen[w] - 1][1] = r; continue; }
+        seen[w] = out.length + 1;
+        out.push([w, r]);
+      }
+      return out;
+    }
+
+    function pairsText(pairs) {
+      var out = [], i;
+      for (i = 0; i < (pairs || []).length; i++) out.push(pairs[i][0] + "→" + pairs[i][1]);
+      return out.join("\n");
+    }
+
+    // 固定表 + 自定义表合成一个按首字分桶的索引。
+    // 自定义条目优先（同一个错词用户自己定过就以用户的为准），并整体按长度降序，
+    // 免得「不径而走」被用户的短词抢先。结果按内容缓存，打字时不会每次重排。
+    var TYPO_INDEX_CACHE = { key: "\u0000", index: null };
+
+    function typoIndexFor(extra) {
+      var list = TYPO_LIST, key = "", i;
+      if (extra && extra.length) {
+        var mine = {}, merged = [];
+        for (i = 0; i < extra.length; i++) {
+          var w0 = extra[i] && extra[i][0], r0 = extra[i] && extra[i][1];
+          if (!w0 || !r0 || w0 === r0) continue;
+          mine[w0] = r0;
+          merged.push([w0, r0]);
+        }
+        for (i = 0; i < TYPO_LIST.length; i++) {
+          if (mine[TYPO_LIST[i][0]] != null) continue;
+          merged.push(TYPO_LIST[i]);
+        }
+        merged.sort(function (a, b) { return b[0].length - a[0].length; });
+        list = merged;
+        var keys = [];
+        for (i = 0; i < extra.length; i++) keys.push(String(extra[i] && extra[i][0]));
+        key = keys.join("\u0001");
+      }
+      if (TYPO_INDEX_CACHE.key === key && TYPO_INDEX_CACHE.index) return TYPO_INDEX_CACHE.index;
+      var map = Object.create(null);
+      for (i = 0; i < list.length; i++) {
+        var w = list[i][0];
+        var head = w.charAt(0);
+        if (!map[head]) map[head] = [];
+        map[head].push(list[i]);
+      }
+      TYPO_INDEX_CACHE = { key: key, index: map };
+      return map;
+    }
+
     function countOccur(text, word) {
       if (!word) return 0;
       var n = 0, from = 0;
@@ -563,29 +1118,51 @@ window.__ModuleLoader__.load({
     }
 
     // 本地固定表：立刻出结果，不花一分钱
-    function localTypos(text, allow) {
-      var out = [], seen = {}, i;
-      for (i = 0; i < TYPO_LIST.length; i++) {
-        var wrong = TYPO_LIST[i][0], right = TYPO_LIST[i][1];
-        if (allow && allow[wrong]) continue;
-        var from = 0;
-        while (true) {
-          var at = text.indexOf(wrong, from);
-          if (at < 0) break;
-          from = at + wrong.length;
-          if (seen[at]) continue;
-          if (looksProperNoun(text, at, wrong)) continue;
-          seen[at] = true;
-          out.push({
-            start: at,
-            end: at + wrong.length,
-            wrong: wrong,
-            right: right,
-            reason: "应作「" + right + "」",
-            confidence: 3,
-            source: "local"
-          });
+    function localTypos(text, allow, extra) {
+      var n = text.length, i, k, j;
+      var hits = [];
+      // 一次前向扫描同时解决两件慢事：
+      // 1) 判断「在不在书名号/引号里」——原来每次命中都 lastIndexOf 往回扫，
+      //    错字一多就是「命中数 × 全文长度」；
+      // 2) 数每个词出现几次——同样从命中列表里数，不用二次扫全文。
+      var index = typoIndexFor(extra);
+      var bookDepth = 0, quoteDepth = 0;
+      for (i = 0; i < n; i++) {
+        var ch = text.charAt(i);
+        if (ch === "《") { bookDepth++; continue; }
+        if (ch === "》") { if (bookDepth > 0) bookDepth--; continue; }
+        if (ch === "「" || ch === "“" || ch === "『") { quoteDepth++; continue; }
+        if (ch === "」" || ch === "”" || ch === "』") { if (quoteDepth > 0) quoteDepth--; continue; }
+        var cands = index[ch];
+        if (!cands) continue;
+        for (k = 0; k < cands.length; k++) {
+          var wrong = cands[k][0];
+          if (!text.startsWith(wrong, i)) continue;
+          hits.push({ start: i, wrong: wrong, right: cands[k][1], inBook: bookDepth > 0, inQuote: quoteDepth > 0 });
+          // 命中就整段跳过，避免「不径而走」里再报一次「不径」
+          i += wrong.length - 1;
+          break;
         }
+      }
+      if (!hits.length) return [];
+      var counts = Object.create(null);
+      for (j = 0; j < hits.length; j++) counts[hits[j].wrong] = (counts[hits[j].wrong] || 0) + 1;
+      var out = [];
+      for (j = 0; j < hits.length; j++) {
+        var h = hits[j];
+        if (allow && allow[h.wrong]) continue;
+        // 书名号里一律不报；引号里且反复出现（≥2 次）的当专有名词
+        if (h.inBook) continue;
+        if (h.inQuote && counts[h.wrong] >= 2) continue;
+        out.push({
+          start: h.start,
+          end: h.start + h.wrong.length,
+          wrong: h.wrong,
+          right: h.right,
+          reason: "应作「" + h.right + "」",
+          confidence: 3,
+          source: "local"
+        });
       }
       return out;
     }
@@ -1170,7 +1747,13 @@ window.__ModuleLoader__.load({
       "感到", "似乎", "大概", "总之", "复杂", "平静", "放松", "沉重", "压抑", "委屈",
       "愤怒", "恐惧", "兴奋", "激动", "说不上来", "不太好", "不对劲"
     ];
+    // 同一段文本要按 5-6 张词表各数一遍，一张表就是几十次全文 indexOf。
+    // 按「词表」做 key（词表是常量数组，用 WeakMap 不会留垃圾），
+    // 只缓存最近一次的文本，换文本自然失效。
+    var COUNT_CACHE = new WeakMap();
     function countWord(text, list) {
+      var slot = COUNT_CACHE.get(list);
+      if (slot && slot.text === text) return slot.n;
       var n = 0;
       for (var i = 0; i < list.length; i++) {
         var w = list[i];
@@ -1182,15 +1765,20 @@ window.__ModuleLoader__.load({
           from = at + w.length;
         }
       }
+      COUNT_CACHE.set(list, { text: text, n: n });
       return n;
     }
 
     // 同一个词在文里出现几次不算「几个词」：数的是「有几种」。
+    var DISTINCT_CACHE = new WeakMap();
     function countDistinctWord(text, list) {
+      var slot = DISTINCT_CACHE.get(list);
+      if (slot && slot.text === text) return slot.n;
       var n = 0;
       for (var i = 0; i < list.length; i++) {
         if (text.indexOf(list[i]) >= 0) n++;
       }
+      DISTINCT_CACHE.set(list, { text: text, n: n });
       return n;
     }
 
@@ -1667,9 +2255,46 @@ window.__ModuleLoader__.load({
       return applyEdits(box.text, local);
     }
 
-    // 问题指纹：分项 + 原文片段。忽略、两版对比都靠它认同一处问题。
+    // 问题指纹：忽略与两版对比都靠它认「还是不是同一处问题」。
+    // 旧的写法直接拿原文片段拼字符串，两个毛病：
+    //   ① 片段里带数字时（标题里的计数、句子里的年份），改一个字把计数从 7 变成 8，
+    //      指纹就变了，用户之前点的「忽略」白点；
+    //   ② 全角半角、标点、空格的细微差异也会让同一处问题被当成两处。
+    // 所以先把片段归一化：去掉空白与标点、把数字统一折成 #，再拼分项。
+    // 归一化之后同一句话在文档里的任何位置都得到同一个指纹，与位置无关。
+    var SIG_BLANK = /[\s\u3000\u00a0\u200b-\u200f\u2060\ufeff]+/g;
+    var SIG_DIGIT = /[0-9０-９]+/g;
+    var SIG_DROP = "，。、；：！？“”‘’「」『』（）()《》〈〉【】…—－·,!?;:'\"<>{}\\[\\]~`|/\\-_=+*&^%$#@.";
+
+    function sigNorm(raw) {
+      var str = String(raw == null ? "" : raw).replace(SIG_BLANK, "").replace(SIG_DIGIT, "#");
+      var out = "", i, ch;
+      for (i = 0; i < str.length; i++) {
+        ch = str.charAt(i);
+        if (SIG_DROP.indexOf(ch) >= 0) continue;
+        out += ch;
+      }
+      return out;
+    }
+
     function sigOf(issue) {
+      var dim = issue.dim || "?";
+      var body = sigNorm(issue.snippet);
+      var kind = sigNorm(issue.title);
+      if (!body && !kind) return dim + "|";
+      // 片段太短容易被别的问题撞上，这时把标题也带上做区分
+      if (body.length < 4 && kind) return dim + "|" + body + "|" + kind;
+      return dim + "|" + body;
+    }
+
+    // 旧格式（升级前写进 localStorage 的忽略表），只为兼容旧数据
+    function legacySigOf(issue) {
       return (issue.dim || "?") + "|" + (issue.snippet == null ? "" : String(issue.snippet));
+    }
+
+    function isIgnored(issue, offItems) {
+      if (!offItems) return false;
+      return !!offItems[sigOf(issue)] || !!offItems[legacySigOf(issue)];
     }
 
     function dimOrderOf(dim) {
@@ -1757,7 +2382,7 @@ window.__ModuleLoader__.load({
           edits: it.edits,
           soft: !!it.soft,
           pen: it.pen || 0,
-          ignored: !!offItems[sigOf(it)]
+          ignored: isIgnored(it, offItems)
         });
       }
 
@@ -1971,24 +2596,52 @@ window.__ModuleLoader__.load({
         for (var j = 0; j < g.issues.length; j++) pri += (g.issues[j].pen || 0) + 1;
         g.pri = pri;
       }
-      var cands = groups.slice().sort(function (a, b) { return b.pri - a.pri; }).slice(0, TOP_CANDIDATES);
-
       var base = analysis.score;
+      // 长文不走「真改一遍再重算」：20 个候选 × 整篇分析，十万字要 4 秒，输入框直接冻住。
+      // 改成按「这条问题占该分项多少分 × 该分项的权重」估一个掉分。
+      // 排序口径不变（都是「改这句值多少分」），只是从实测换成线性估算。
+      var longText = analysis.chars > PERF_EST;
+      // 「真改一遍再重算」是本插件最贵的一步：每多一个候选就多跑一次整篇分析。
+      // 估算模式下候选可以多留几个（反正不重算），实测模式下保持原样。
+      var cap = longText ? 12 : TOP_CANDIDATES;
+      var cands = groups.slice().sort(function (a, b) { return b.pri - a.pri; }).slice(0, cap);
+      var dimW = {}, wSum = 0;
+      if (longText) {
+        for (var dw = 0; dw < analysis.dims.length; dw++) {
+          var dd = analysis.dims[dw];
+          dimW[dd.key] = dd.ignored ? 0 : (dd.w || 0);
+          if (!dd.ignored) wSum += dd.w || 0;
+        }
+        if (wSum <= 0) wSum = 1;
+      }
       var out = [];
       for (var k = 0; k < cands.length; k++) {
         var c = cands[k];
-        var rw = buildRewrite(text, c.issues);
-        if (!rw || !rw.text || rw.text === text) continue;
-        var next = analyze(rw.text, mode, opts, true).score;
-        var delta = base - next;
-        if (delta <= 0) continue;
+        var rw, next, delta;
+        if (longText) {
+          var gain = 0;
+          for (var gq = 0; gq < c.issues.length; gq++) {
+            var iss = c.issues[gq];
+            gain += (iss.pen || 0) * (dimW[iss.dim] || 0);
+          }
+          delta = gain / wSum;
+          if (delta <= 0) continue;
+          rw = { text: "estimate" };
+        } else {
+          rw = buildRewrite(text, c.issues);
+          if (!rw || !rw.text || rw.text === text) continue;
+          next = analyze(rw.text, mode, opts, true).score;
+          delta = base - next;
+          if (delta <= 0) continue;
+        }
         out.push({
           si: c.si,
           start: c.start,
           end: c.end,
           before: c.text,
           after: rewriteSentence({ start: c.start, end: c.end, text: c.text }, collectEdits(c.issues)),
-          delta: delta,
+          delta: longText ? Math.max(1, Math.round(delta)) : delta,
+          estimated: longText,
           dims: c.issues.map(function (x) { return x.dim; }),
           issues: c.issues
         });
@@ -2104,6 +2757,43 @@ window.__ModuleLoader__.load({
       try { window.localStorage.setItem(DRAFT_KEY, v || ""); } catch (e) { /* storage unavailable */ }
     }
 
+    // 面板和设置页各有一份界面，但共用同一份 localStorage。谁改了，就广播一声，
+    // 另一边收到后重读（重读时做值相等判断，值没变就不 setState，避免来回震荡）。
+    var SETTINGS_EVENT = "dsh-style-detector:settings";
+
+    function broadcastSettings() {
+      try {
+        if (typeof window !== "undefined" && typeof window.dispatchEvent === "function" && typeof CustomEvent === "function") {
+          window.dispatchEvent(new CustomEvent(SETTINGS_EVENT));
+        }
+      } catch (e) { /* no window: unit tests */ }
+    }
+
+    function sameJson(a, b) {
+      try { return JSON.stringify(a) === JSON.stringify(b); } catch (e) { return false; }
+    }
+
+    function copyRaw(text) {
+      try {
+        if (navigator && navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+          return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return false; });
+        }
+      } catch (e) { /* fall through */ }
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        return Promise.resolve(!!ok);
+      } catch (e) {
+        return Promise.resolve(false);
+      }
+    }
+
     // 自动复审开关（默认开：用户要的是「一个分析」，不用每回手动点）
     function readAuto() {
       try {
@@ -2116,6 +2806,7 @@ window.__ModuleLoader__.load({
 
     function saveAuto(v) {
       try { window.localStorage.setItem(AUTO_KEY, v ? "1" : "0"); } catch (e) { /* storage unavailable */ }
+      broadcastSettings();
     }
 
     // 文体模式：记住上次选的，下次打开还是同一个
@@ -2130,6 +2821,7 @@ window.__ModuleLoader__.load({
 
     function saveMode(v) {
       try { window.localStorage.setItem(MODE_KEY, MODES[v] ? v : DEFAULT_MODE); } catch (e) { /* storage unavailable */ }
+      broadcastSettings();
     }
 
     // 把用户输入的多行/逗号分隔词表拆成数组
@@ -2163,6 +2855,7 @@ window.__ModuleLoader__.load({
 
     function saveIgnore(v) {
       try { window.localStorage.setItem(IGNORE_KEY, JSON.stringify(v || EMPTY_IGNORE)); } catch (e) { /* storage unavailable */ }
+      broadcastSettings();
     }
 
     function readCustom() {
@@ -2178,6 +2871,22 @@ window.__ModuleLoader__.load({
 
     function saveCustom(v) {
       try { window.localStorage.setItem(CUSTOM_KEY, JSON.stringify({ deny: (v && v.deny) || [], allow: (v && v.allow) || [] })); } catch (e) { /* storage unavailable */ }
+      broadcastSettings();
+    }
+
+    function readTypos() {
+      try {
+        var raw = window.localStorage.getItem(TYPO_KEY);
+        if (!raw) return [];
+        return parsePairs(JSON.parse(raw));
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveTypos(v) {
+      try { window.localStorage.setItem(TYPO_KEY, JSON.stringify((v || []).map(function (p) { return [p[0], p[1]]; }))); } catch (e) { /* storage unavailable */ }
+      broadcastSettings();
     }
 
     function readTarget() {
@@ -2192,6 +2901,7 @@ window.__ModuleLoader__.load({
 
     function saveTarget(v) {
       try { window.localStorage.setItem(TARGET_KEY, String(v)); } catch (e) { /* storage unavailable */ }
+      broadcastSettings();
     }
 
     function readV2() {
@@ -2219,6 +2929,7 @@ window.__ModuleLoader__.load({
 
     function saveFontScale(v) {
       try { window.localStorage.setItem(FONT_KEY, String(v)); } catch (e) { /* storage unavailable */ }
+      broadcastSettings();
     }
 
     function readPick() {
@@ -2270,6 +2981,16 @@ window.__ModuleLoader__.load({
 
     var CSS = [
       ".asd-root{display:flex;flex-direction:column;gap:10px;padding:12px;height:100%;box-sizing:border-box;overflow-y:auto;",
+  // 设置页不在 .asd-root 里，所以要自己再声明一遍这套派生色，否则 --asd-surface 全是空值
+  ".asd-settings{display:flex;flex-direction:column;gap:14px;padding:4px 0 28px;--asd-surface:color-mix(in srgb,var(--dsw-alias-label-primary) 5%,transparent);--asd-surface-2:color-mix(in srgb,var(--dsw-alias-label-primary) 8%,transparent);--asd-line:color-mix(in srgb,var(--dsw-alias-label-primary) 14%,transparent);--asd-line-strong:color-mix(in srgb,var(--dsw-alias-label-primary) 24%,transparent);}",
+  ".asd-setTitle{margin:0;font-size:14px;font-weight:600;color:var(--dsw-alias-label-primary);}",
+  ".asd-setHint{margin:0;font-size:11px;line-height:1.6;color:var(--dsw-alias-label-tertiary);}",
+  ".asd-setRow{display:flex;gap:10px;align-items:flex-start;}",
+  ".asd-setLabel{flex:0 0 92px;font-size:11px;line-height:24px;color:var(--dsw-alias-label-secondary);}",
+  ".asd-setBody{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:6px;}",
+  ".asd-setNum{width:64px;height:24px;padding:0 6px;font:inherit;font-size:12px;border-radius:6px;border:1px solid var(--asd-line);background:var(--asd-surface);color:var(--dsw-alias-label-primary);}",
+  ".asd-setMsg{font-size:11px;min-height:14px;color:var(--dsw-alias-state-success-primary);}",
+  ".asd-setText{height:64px;}",
       "color:var(--dsw-alias-label-primary);font-size:13px;line-height:1.55;",
       // 主题里只有 error / warn / business / success 四种状态色，「排比」和「模型复审」
       // 如果都用 business 就分不出来，这里用 color-mix 各调一个可辨识的色相。
@@ -2335,6 +3056,9 @@ window.__ModuleLoader__.load({
       "font-variant-numeric:tabular-nums;}",
       ".asd-score{display:flex;align-items:center;gap:14px;padding:12px;border-radius:14px;",
       "border:1px solid var(--asd-line-strong);background:var(--asd-surface-2);}",
+      ".asd-segBtn:focus-visible,.asd-btn:focus-visible,.asd-chip:focus-visible,.asd-headBtn:focus-visible,.asd-fsBtn:focus-visible,.asd-pickRow:focus-visible,.asd-rhythmBar:focus-visible,.asd-heatCell:focus-visible,.asd-input:focus-visible,.asd-optInput:focus-visible,.asd-setNum:focus-visible,.asd-tr[data-click=true]:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:1px;}",
+      ".asd-rhythmBar:focus-visible,.asd-heatCell:focus-visible{opacity:1;}",
+      "@media (prefers-reduced-motion: reduce){.asd-root *{transition:none !important;animation:none !important;}}",
       ".asd-ringWrap{position:relative;flex:0 0 auto;width:84px;height:84px;}",
       ".asd-ring{display:block;}",
       ".asd-ringTrack{fill:none;stroke:var(--asd-line-strong);stroke-width:7;}",
@@ -2618,7 +3342,11 @@ window.__ModuleLoader__.load({
       var r = 34;
       var c = 2 * Math.PI * r;
       var pct = props.valid ? clamp(props.score, 0, 100) / 100 : 0;
-      return h("div", { className: "asd-ringWrap" },
+      return h("div", {
+        className: "asd-ringWrap",
+        role: "img",
+        "aria-label": props.valid ? t("AI 味") + " " + props.score + " / 100" : t("字数太少，先多写两句")
+      },
         h("svg", { className: "asd-ring", viewBox: "0 0 84 84", width: 84, height: 84, "aria-hidden": "true" },
           h("circle", { cx: 42, cy: 42, r: r, className: "asd-ringTrack" }),
           h("circle", {
@@ -2667,6 +3395,344 @@ window.__ModuleLoader__.load({
         "data-tone": toneOf(d.score),
         title: loc ? "" : "这一项是全文统计，没有可定位的片段"
       }, kids);
+    }
+
+    // ---- DSH 设置页里的「AI 文风检测器」一栏 ----
+    // 和右侧栏面板共用同一份 localStorage；谁改了都广播一声，另一边收到后重读。
+    var SET_DIMS = ["cliche", "uniformity", "parallel", "connective", "detail", "diversity"];
+
+    function SettingsCard() {
+      var modeSt = useState(readMode);
+      var mode = modeSt[0], setModeV = modeSt[1];
+      var tgtSt = useState(readTarget);
+      var tgt = tgtSt[0], setTgtV = tgtSt[1];
+      var fontSt = useState(readFontScale);
+      var fontIdx = fontSt[0], setFontIdx = fontSt[1];
+      var langSt = useState(readLang);
+      var langPref = langSt[0], setLangPref = langSt[1];
+      var autoSt = useState(readAuto);
+      var auto = autoSt[0], setAutoV = autoSt[1];
+      var cusSt = useState(readCustom);
+      var custom = cusSt[0], setCustomV = cusSt[1];
+      var typoSt = useState(readTypos);
+      var typos = typoSt[0], setTyposV = typoSt[1];
+      var ignSt = useState(readIgnore);
+      var ignore = ignSt[0], setIgnoreV = ignSt[1];
+      var msgSt = useState("");
+      var msg = msgSt[0], setMsg = msgSt[1];
+      var cfgSt = useState("");
+      var cfg = cfgSt[0], setCfg = cfgSt[1];
+
+      useLangId();
+
+      var flash = function (text) { setMsg(text); };
+
+      // 面板那边改了设置 → 重读。值没变就不 setState，否则两边会互相触发。
+      useEffect(function () {
+        var sync = function () {
+          var m = readMode();
+          setModeV(function (p) { return p === m ? p : m; });
+          var g = readTarget();
+          setTgtV(function (p) { return p === g ? p : g; });
+          var f = readFontScale();
+          setFontIdx(function (p) { return p === f ? p : f; });
+          var lg = readLang();
+          setLangPref(function (p) { return p === lg ? p : lg; });
+          var au = readAuto();
+          setAutoV(function (p) { return p === au ? p : au; });
+          var cu = readCustom();
+          setCustomV(function (p) { return sameJson(p, cu) ? p : cu; });
+          var tp = readTypos();
+          setTyposV(function (p) { return sameJson(p, tp) ? p : tp; });
+          var ig = readIgnore();
+          setIgnoreV(function (p) { return sameJson(p, ig) ? p : ig; });
+        };
+        if (typeof window.addEventListener !== "function") return undefined;
+        window.addEventListener(SETTINGS_EVENT, sync);
+        return function () {
+          try { window.removeEventListener(SETTINGS_EVENT, sync); } catch (e) { /* gone */ }
+        };
+      }, []);
+
+      var pickMode = function (k) {
+        if (mode === k) return;
+        setModeV(k);
+        saveMode(k);
+      };
+      var pickLang = function (k) {
+        if (langPref === k) return;
+        setLangPref(k);
+        saveLang(k);
+        flash(t("界面语言已切换"));
+      };
+      var setTargetNum = function (v) {
+        var n = parseInt(v, 10);
+        if (!isFinite(n)) n = DEFAULT_TARGET;
+        n = clamp(n, 1, 100);
+        setTgtV(n);
+        saveTarget(n);
+      };
+      var toggleDim = function (key) {
+        var dims = (ignore && ignore.dims) || {};
+        var next = { items: (ignore && ignore.items) || {}, dims: {} };
+        for (var k in dims) {
+          if (Object.prototype.hasOwnProperty.call(dims, k) && dims[k] && k !== key) next.dims[k] = true;
+        }
+        if (!dims[key]) next.dims[key] = true;
+        setIgnoreV(next);
+        saveIgnore(next);
+      };
+      var restoreAll = function () {
+        var next = { items: {}, dims: {} };
+        setIgnoreV(next);
+        saveIgnore(next);
+        flash(t("已恢复全部忽略项"));
+      };
+      var editList = function (which, text) {
+        var next = { deny: (custom && custom.deny) || [], allow: (custom && custom.allow) || [] };
+        next[which] = parseWords(text);
+        setCustomV(next);
+        saveCustom(next);
+      };
+      var exportCfg = function () {
+        var json = JSON.stringify({
+          v: CONFIG_VERSION, mode: mode, target: tgt, font: fontIdx, lang: langPref, auto: auto,
+          ignore: ignore, custom: custom, typos: pairsText(typos)
+        }, null, 2);
+        setCfg(json);
+        copyRaw(json).then(function (ok) {
+          flash(ok ? t("配置已复制，粘到别处存好") : t("已生成，请手动复制下面的框"));
+        });
+      };
+      var importCfg = function () {
+        var raw = String(cfg || "").trim();
+        if (!raw) { flash(t("先把导出的配置粘到框里")); return; }
+        var obj = null;
+        try { obj = JSON.parse(raw); } catch (e) { obj = null; }
+        if (!obj || typeof obj !== "object") { flash(t("这不是合法的配置 JSON")); return; }
+        var got = [];
+        var k;
+        if (obj.mode && MODES[obj.mode]) { setModeV(obj.mode); saveMode(obj.mode); got.push(t("文体")); }
+        if (isFinite(Number(obj.target))) {
+          var n = clamp(Math.round(Number(obj.target)), 1, 100);
+          setTgtV(n); saveTarget(n); got.push(t("目标分"));
+        }
+        if (isFinite(Number(obj.font))) {
+          var f = clamp(Math.round(Number(obj.font)), 0, FONT_PX.length - 1);
+          setFontIdx(f); saveFontScale(f); got.push(t("字号"));
+        }
+        if (obj.lang === "zh" || obj.lang === "en" || obj.lang === "auto") {
+          setLangPref(obj.lang); saveLang(obj.lang); got.push(t("界面语言"));
+        }
+        if (typeof obj.auto === "boolean") { setAutoV(obj.auto); saveAuto(obj.auto); got.push(t("自动复审")); }
+        if (obj.typos != null) {
+          var tp2 = parsePairs(obj.typos);
+          setTyposV(tp2); saveTypos(tp2); got.push(t("自定义错字表"));
+        }
+        if (obj.custom) {
+          var cu = { deny: parseWords(obj.custom.deny), allow: parseWords(obj.custom.allow) };
+          setCustomV(cu); saveCustom(cu); got.push(t("自定义词表"));
+        }
+        if (obj.ignore) {
+          var ig = { items: {}, dims: {} };
+          var it = obj.ignore.items || {}, dm = obj.ignore.dims || {};
+          for (k in it) { if (Object.prototype.hasOwnProperty.call(it, k) && it[k]) ig.items[k] = it[k]; }
+          for (k in dm) { if (Object.prototype.hasOwnProperty.call(dm, k) && dm[k]) ig.dims[k] = true; }
+          setIgnoreV(ig); saveIgnore(ig); got.push(t("已忽略"));
+        }
+        flash(got.length ? t("已导入：") + got.join(" · ") : t("这份配置里没有可识别的设置"));
+      };
+
+      var chipRow = function (items, cur, onPick, mark) {
+        return h("div", { className: "asd-chips" }, items.map(function (it) {
+          var own = {};
+          own.key = it.id;
+          own.type = "button";
+          own.className = "asd-chip";
+          own[mark] = it.id;
+          own["data-on"] = String(cur === it.id);
+          own.onClick = function () { onPick(it.id); };
+          return h("button", own, it.label);
+        }));
+      };
+
+      var labels = (MODES[mode] && MODES[mode].labels) || MODES[DEFAULT_MODE].labels;
+      var dimChips = SET_DIMS.map(function (key) {
+        var off = !!(ignore && ignore.dims && ignore.dims[key]);
+        return h("button", {
+          key: key,
+          type: "button",
+          className: "asd-chip",
+          "data-dim": key,
+          "data-on": String(off),
+          title: off ? t("点一下恢复这一项计分") : t("点一下：这一项不算分，也不再提示"),
+          onClick: function () { toggleDim(key); }
+        }, t(labels[key] || key));
+      });
+      var ignoredDimN = 0, ignoredItemN = 0, dk, ik;
+      if (ignore && ignore.dims) for (dk in ignore.dims) { if (ignore.dims[dk]) ignoredDimN++; }
+      if (ignore && ignore.items) for (ik in ignore.items) { if (ignore.items[ik]) ignoredItemN++; }
+
+      return h("div", { className: "asd-settings" },
+        h("h2", { className: "asd-setTitle" }, t(TAB_TITLE)),
+        h("p", { className: "asd-setHint" }, t("这里的设置和右侧栏面板共用同一份，改哪边都立刻生效。")),
+
+        h("div", { className: "asd-setRow" },
+          h("span", { className: "asd-setLabel" }, t("文体")),
+          h("div", { className: "asd-setBody" },
+            chipRow(Object.keys(MODES).map(function (k) { return { id: k, label: t(MODES[k].label) }; }), mode, pickMode, "data-mode"),
+            h("p", { className: "asd-setHint" }, t("通用适合说明、议论、公文；网文适合小说正文与对白。两种文体用的是不同的词表和权重。"))
+          )
+        ),
+
+        h("div", { className: "asd-setRow" },
+          h("span", { className: "asd-setLabel" }, t("目标分")),
+          h("div", { className: "asd-setBody" },
+            h("div", { className: "asd-chips" },
+              h("input", {
+                type: "number",
+                className: "asd-setNum",
+                min: 1,
+                max: 100,
+                value: String(tgt),
+                "aria-label": t("目标分"),
+                onChange: function (e) { setTargetNum(e.target.value); }
+              }),
+              TARGET_PRESETS.map(function (v) {
+                return h("button", {
+                  key: "t" + v,
+                  type: "button",
+                  className: "asd-chip",
+                  "data-preset": String(v),
+                  "data-on": String(tgt === v),
+                  onClick: function () { setTgtV(v); saveTarget(v); }
+                }, String(v));
+              })
+            ),
+            h("p", { className: "asd-setHint" }, t("达到这个分数就算过关，面板上的环会变绿。"))
+          )
+        ),
+
+        h("div", { className: "asd-setRow" },
+          h("span", { className: "asd-setLabel" }, t("界面语言")),
+          h("div", { className: "asd-setBody" },
+            chipRow(
+              [{ id: "auto", label: t("跟随系统") }, { id: "zh", label: "中文" }, { id: "en", label: "English" }],
+              langPref, pickLang, "data-lang"
+            )
+          )
+        ),
+
+        h("div", { className: "asd-setRow" },
+          h("span", { className: "asd-setLabel" }, t("标注字号")),
+          h("div", { className: "asd-setBody" },
+            h("div", { className: "asd-chips" },
+              h("button", {
+                type: "button", className: "asd-chip", "data-step": "down",
+                disabled: fontIdx <= 0,
+                onClick: function () { if (fontIdx > 0) { setFontIdx(fontIdx - 1); saveFontScale(fontIdx - 1); } }
+              }, "A-"),
+              h("span", { className: "asd-setHint" }, FONT_PX[fontIdx] + " px"),
+              h("button", {
+                type: "button", className: "asd-chip", "data-step": "up",
+                disabled: fontIdx >= FONT_PX.length - 1,
+                onClick: function () { if (fontIdx < FONT_PX.length - 1) { setFontIdx(fontIdx + 1); saveFontScale(fontIdx + 1); } }
+              }, "A+")
+            )
+          )
+        ),
+
+        h("div", { className: "asd-setRow" },
+          h("span", { className: "asd-setLabel" }, t("自动复审")),
+          h("div", { className: "asd-setBody" },
+            h("div", { className: "asd-chips" },
+              h("button", {
+                type: "button", className: "asd-chip", "data-auto": "on", "data-on": String(!!auto),
+                onClick: function () { setAutoV(true); saveAuto(true); }
+              }, t("停笔后自动复审")),
+              h("button", {
+                type: "button", className: "asd-chip", "data-auto": "off", "data-on": String(!auto),
+                onClick: function () { setAutoV(false); saveAuto(false); }
+              }, t("只在手动点的时候复审"))
+            ),
+            h("p", { className: "asd-setHint" }, t("自动复审会调用一次模型，需要花一点额度；关掉之后完全离线也能用本地规则。"))
+          )
+        ),
+
+        h("div", { className: "asd-setRow" },
+          h("span", { className: "asd-setLabel" }, t("不计分的项")),
+          h("div", { className: "asd-setBody" },
+            h("div", { className: "asd-chips" }, dimChips),
+            h("p", { className: "asd-setHint" }, t("点亮表示这一项不参与打分、也不再提示。适合你的文体用不上某一项时。"))
+          )
+        ),
+
+        h("div", { className: "asd-setRow" },
+          h("span", { className: "asd-setLabel" }, t("自定义词表")),
+          h("div", { className: "asd-setBody" },
+            h("textarea", {
+              className: "asd-optInput asd-setText",
+              value: (custom && custom.deny ? custom.deny.join("\n") : ""),
+              placeholder: t("黑名单：这些词一出现就算套话"),
+              "aria-label": t("黑名单"),
+              onChange: function (e) { editList("deny", e.target.value); }
+            }),
+            h("textarea", {
+              className: "asd-optInput asd-setText",
+              value: (custom && custom.allow ? custom.allow.join("\n") : ""),
+              placeholder: t("白名单：这些词永远不算问题"),
+              "aria-label": t("白名单"),
+              onChange: function (e) { editList("allow", e.target.value); }
+            })
+          )
+        ),
+
+        h("div", { className: "asd-setRow" },
+          h("span", { className: "asd-setLabel" }, t("自定义错字表")),
+          h("div", { className: "asd-setBody" },
+            h("textarea", {
+              className: "asd-optInput asd-setText",
+              value: pairsText(typos),
+              placeholder: t("一行一条，写成 错→对"),
+              "aria-label": t("自定义错字表"),
+              onChange: function (e) { var next = parsePairs(e.target.value); setTyposV(next); saveTypos(next); }
+            }),
+            h("p", { className: "asd-setHint" }, t("固定表里没有的词自己补。同一条错词以这里为准。"))
+          )
+        ),
+
+        h("div", { className: "asd-setRow" },
+          h("span", { className: "asd-setLabel" }, t("已忽略")),
+          h("div", { className: "asd-setBody" },
+            h("p", { className: "asd-setHint" }, t("已忽略的项") + " " + ignoredDimN + " · " + t("已忽略的条目") + " " + ignoredItemN),
+            h("div", { className: "asd-chips" },
+              h("button", {
+                type: "button", className: "asd-btn",
+                disabled: ignoredDimN + ignoredItemN === 0,
+                onClick: restoreAll
+              }, t("全部恢复"))
+            )
+          )
+        ),
+
+        h("div", { className: "asd-setRow" },
+          h("span", { className: "asd-setLabel" }, t("配置备份")),
+          h("div", { className: "asd-setBody" },
+            h("div", { className: "asd-chips" },
+              h("button", { type: "button", className: "asd-btn", "data-cfg": "export", onClick: exportCfg }, t("导出")),
+              h("button", { type: "button", className: "asd-btn", "data-cfg": "import", onClick: importCfg }, t("导入"))
+            ),
+            h("textarea", {
+              className: "asd-optInput asd-setText",
+              value: cfg,
+              placeholder: t("导出后可以复制走；换机器时粘回来点「导入」"),
+              "aria-label": t("配置备份"),
+              onChange: function (e) { setCfg(e.target.value); }
+            }),
+            h("p", { className: "asd-setMsg" }, msg || "")
+          )
+        )
+      );
     }
 
     function StyleDetectorTab(props) {
@@ -2744,6 +3810,7 @@ window.__ModuleLoader__.load({
       var setIgnore = ignoreState[1];
       // 自定义词表：黑名单永远算套话，白名单永远不算
       var customState = useState(readCustom);
+      var typoState = useState(readTypos);
       var custom = customState[0];
       var setCustom = customState[1];
       // 目标分：达到就显示已达标
@@ -2776,6 +3843,13 @@ window.__ModuleLoader__.load({
       var fontState = useState(readFontScale);
       var fontScale = fontState[0];
       var setFontScale = fontState[1];
+
+      // 界面语言：auto 跟随 DSH 的语言设置，zh / en 强制指定。
+      var langState = useState(readLang);
+      var langPref = langState[0];
+      var setLangPref = langState[1];
+      // 订阅 locale 变化，DSH 里换语言时本面板立即跟着换。
+      useLangId();
       // 面板根节点：切页签时回到顶部
       var rootRef = useRef(null);
       // 配置备份：导入导出用的文本框（换机器、重装时不用一项项重配）
@@ -2784,13 +3858,21 @@ window.__ModuleLoader__.load({
       var setCfgText = cfgState[1];
       // 错字校对：模型那一路的结果只对发起时的那段文本有效，与 AI 味完全分开
       var proofState = useState(null);
+      var typoOpenState = useState(false);
       var proof = proofState[0];
+      var typos = typoState[0];
+      var setTypos = typoState[1];
+      var typoOpen = typoOpenState[0];
+      var setTypoOpen = typoOpenState[1];
       var setProof = proofState[1];
       var proofSeq = useRef(0);
+      // 长文每次停顿都要跑一遍全部分析，防抖得放宽一点，否则打字像卡住
+      var heavyText = text.length > PERF_LONG;
       useEffect(function () {
-        var id = window.setTimeout(function () { setSettled(text); }, 180);
+        // 长文给足 420ms：宁可晚半拍出分，也不要每敲一句就冻住半秒
+        var id = window.setTimeout(function () { setSettled(text); }, heavyText ? 420 : 180);
         return function () { window.clearTimeout(id); };
-      }, [text]);
+      }, [text, heavyText]);
 
       useEffect(function () { saveDraft(text); }, [text]);
 
@@ -2830,10 +3912,10 @@ window.__ModuleLoader__.load({
       // 错字：本地固定表立刻算；模型那一路要等用户点「模型校对」
       var allowWords = useMemo(function () { return allowSet(custom); }, [custom]);
       var typoList = useMemo(function () {
-        var local = localTypos(settled, allowWords);
+        var local = localTypos(settled, allowWords, typos);
         if (!proof || proof.status !== "done" || !proof.data || proof.text !== settled) return local;
         return mergeProof(settled, local, proof.data.items, allowWords);
-      }, [settled, allowWords, proof]);
+      }, [settled, allowWords, typos, proof]);
 
       // 建议卡片要显示「原句」，按标点切句只算一次
       var sents = useMemo(function () { return splitSentences(settled); }, [settled]);
@@ -2846,21 +3928,26 @@ window.__ModuleLoader__.load({
 
       // 段落热力：每段单独打一次分（轻量，不拼分段）
       var heat = useMemo(function () {
-        if (!analysis.valid) return [];
+        // 段落热力要逐段各跑一次分析，是仅次于「重点」的一笔开销。
+        // 不在诊断页时不必算：换回来会立刻重算。
+        if (!analysis.valid || view !== "diagnose") return [];
         return paraHeat(settled, mode, opts);
-      }, [settled, analysis.valid, mode, opts]);
+      }, [settled, analysis.valid, mode, opts, view]);
 
       // 两版对比：第一版就是当前正文，第二版是另一个框里贴的
       var cmpResult = useMemo(function () {
+        // 两版对比要把两段都分析一遍，只在对比页才算
+        if (view !== "compare") return null;
         if (!v2Text || v2Text.trim().length < MIN_CHARS) return null;
         var a = analyze(settled, mode, opts);
         var b = analyze(v2Text, mode, opts);
         if (!a.valid || !b.valid) return null;
         return compareVersions(a, b);
-      }, [settled, v2Text, mode, opts]);
+      }, [settled, v2Text, mode, opts, view]);
 
       // 句长节奏：每根柱子一句，超过均句长 1.6 倍的标黄
       var rhythm = useMemo(function () {
+        if (view !== "diagnose") return [];
         // 句子一多（整章几千字就是上百句），一根柱子至少要有 1px + 间距，
         // 否则整排会撑出卡片外。所以超过上限就按组归并，取组内最长的那句当柱高。
         var MAX_BARS = 64;
@@ -2884,17 +3971,27 @@ window.__ModuleLoader__.load({
           out[rj].pct = Math.max(6, Math.round((out[rj].ln / max) * 100));
         }
         return out;
-      }, [sents]);
+      }, [sents, view]);
 
       // 已忽略的指纹列表（可逐条恢复）
       var ignoredList = useMemo(function () {
         var out = [];
-        for (var k in ignore.items) if (ignore.items[k]) out.push(k);
+        for (var k in ignore.items) {
+          var v = ignore.items[k];
+          if (!v) continue;
+          // 旧数据存的是 true，只能把指纹拆开将就显示
+          var label = typeof v === "object" && v.text
+            ? (DIM_LABEL[v.dim] || v.dim || "") + " · " + snippetOf(v.text)
+            : k.replace("|", " · ");
+          out.push({ sig: k, label: label });
+        }
         return out;
       }, [ignore]);
 
       // 整章批量：每章只算分数，不拼分段与改写
       var batchRows = useMemo(function () {
+        // 每章各分析一遍，只在批量页才算
+        if (view !== "batch") return [];
         if (!batch || !batch.length) return [];
         var rows = [];
         // 上一章的分：算「较上章」用。只看有分的章，跳过的章不打断比较。
@@ -2915,7 +4012,7 @@ window.__ModuleLoader__.load({
           if (sc != null) prevScore = sc;
         }
         return rows;
-      }, [batch, mode, opts]);
+      }, [batch, mode, opts, view]);
 
       // 整章批量的总览：平均分、首末变化、最好/最差章
       var batchStats = useMemo(function () {
@@ -3104,6 +4201,7 @@ window.__ModuleLoader__.load({
 
       useEffect(function () { saveIgnore(ignore); }, [ignore]);
       useEffect(function () { saveCustom(custom); }, [custom]);
+      useEffect(function () { saveTypos(typos); }, [typos]);
       useEffect(function () { saveTarget(target); }, [target]);
       useEffect(function () { saveV2(v2Text); }, [v2Text]);
       useEffect(function () { saveFontScale(fontScale); }, [fontScale]);
@@ -3178,6 +4276,16 @@ window.__ModuleLoader__.load({
           }
           if (mod && !typing && !e.shiftKey && (e.key === "z" || e.key === "Z")) {
             if (undo) { e.preventDefault(); undoLast(); }
+            return;
+          }
+          // Alt+1…8 直接跳到对应页签。Alt 组合不会和输入框里的编辑键冲突，
+          // 所以在正文里打字时也认，省得先点出去再按。
+          if (e.altKey && !mod && !e.shiftKey && /^[1-8]$/.test(e.key || "")) {
+            var slot = parseInt(e.key, 10) - 1;
+            if (slot >= 0 && slot < VIEW_KEYS.length) {
+              e.preventDefault();
+              setView(VIEW_KEYS[slot]);
+            }
             return;
           }
           if (e.key === "Escape") {
@@ -3311,10 +4419,12 @@ window.__ModuleLoader__.load({
       // —— 忽略一条：记下指纹，下次改文还在 ——
       var ignoreIssue = function (it) {
         var sig = sigOf(it);
+        // 存一份能读的说明，恢复列表里就不用把指纹原文摊给用户看
+        var note = { dim: it.dim || "", text: it.snippet || it.title || "" };
         setIgnore(function (prev) {
           var items = {};
           for (var k in prev.items) items[k] = prev.items[k];
-          items[sig] = true;
+          items[sig] = note;
           return { items: items, dims: prev.dims || {} };
         });
         if (activeId === it.id) setActiveId("");
@@ -3322,9 +4432,24 @@ window.__ModuleLoader__.load({
       };
 
       var unignoreIssue = function (sig) {
+        var drop = {};
+        drop[sig] = 1;
         setIgnore(function (prev) {
           var items = {};
-          for (var k in prev.items) if (k !== sig) items[k] = true;
+          for (var k in prev.items) if (!drop[k]) items[k] = prev.items[k];
+          return { items: items, dims: prev.dims || {} };
+        });
+        flash("已恢复");
+      };
+
+      // 从卡片恢复：新旧两种指纹一起清，免得升级前点的忽略清不掉
+      var restoreIssue = function (it) {
+        var drop = {};
+        drop[sigOf(it)] = 1;
+        drop[legacySigOf(it)] = 1;
+        setIgnore(function (prev) {
+          var items = {};
+          for (var k in prev.items) if (!drop[k]) items[k] = prev.items[k];
           return { items: items, dims: prev.dims || {} };
         });
         flash("已恢复");
@@ -3538,10 +4663,11 @@ window.__ModuleLoader__.load({
                   title: (r.grouped
                     ? "第 " + r.from + "–" + r.to + " 句 · 最长 " + r.ln + " 字"
                     : "第 " + r.from + " 句 · " + r.ln + " 字") + " · 点一下去标注页定位",
-                  onClick: function () {
-                    var a = sents[r.from - 1];
-                    var b = sents[r.to - 1];
-                    if (a && b) jumpRange(a.start, b.end);
+                  role: "button",
+                  tabIndex: 0,
+                  onClick: function () { jumpBar(r); },
+                  onKeyDown: function (ev) {
+                    if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); jumpBar(r); }
                   }
                 });
               })
@@ -3569,7 +4695,12 @@ window.__ModuleLoader__.load({
                   title: "第 " + (pi + 1) + " 段 · " + p.chars + " 字"
                     + (p.score == null ? "（太短，不评）" : " · AI 味 " + p.score)
                     + " · 点一下去标注页定位这一段",
-                  onClick: function () { jumpRange(p.start, p.end); }
+                  role: "button",
+                  tabIndex: 0,
+                  onClick: function () { jumpHeat(p); },
+                  onKeyDown: function (ev) {
+                    if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); jumpHeat(p); }
+                  }
                 });
               })
             )
@@ -3641,6 +4772,13 @@ window.__ModuleLoader__.load({
       };
 
       // 从图表跳回原文：把区间记下来，切到标注页，由下面的 effect 滚到那一段
+      // 柱子与热力块共用的两段跳转，键盘和鼠标都走这里
+      var jumpBar = function (r) {
+        var a = sents[r.from - 1];
+        var b = sents[r.to - 1];
+        if (a && b) jumpRange(a.start, b.end);
+      };
+      var jumpHeat = function (p) { jumpRange(p.start, p.end); };
       var jumpRange = function (start, end) {
         if (typeof start !== "number" || typeof end !== "number" || end <= start) return;
         setFocus({ start: start, end: end, tick: Date.now() });
@@ -3829,7 +4967,7 @@ window.__ModuleLoader__.load({
                 h("button", {
                   type: "button", className: "asd-btn",
                   title: off ? "恢复这一条，重新参与打分" : "这条我确认不改，之后不再出现也不计分",
-                  onClick: function () { if (off) unignoreIssue(sigOf(it)); else ignoreIssue(it); }
+                  onClick: function () { if (off) restoreIssue(it); else ignoreIssue(it); }
                 }, off ? "恢复" : "忽略这条")
               )
             );
@@ -3882,7 +5020,12 @@ window.__ModuleLoader__.load({
             return h("div", { key: t.si + "-" + i, className: "asd-card" },
               h("div", { className: "asd-cardTop" },
                 h("span", { className: "asd-topRank" }, "#" + (i + 1)),
-                h("span", { className: "asd-topDelta" }, "−" + t.delta + " 分"),
+                h("span", {
+                  className: "asd-topDelta",
+                  title: t.estimated
+                    ? "长文不逐句重算，这个降幅是按该分项的权重估的；顺序是准的"
+                    : "把这一句真改一遍之后重算出来的实际降幅"
+                }, (t.estimated ? "约 −" : "−") + t.delta + " 分"),
                 h("span", { className: "asd-topDims" }, t.dims.map(keyLabel).filter(function (x, k, arr) { return arr.indexOf(x) === k; }).join(" · "))
               ),
               h("div", { className: "asd-cmp" },
@@ -4066,7 +5209,12 @@ window.__ModuleLoader__.load({
                   className: "asd-tr",
                   "data-click": "true",
                   title: "点一下把「" + r.title + "」载入正文，切到诊断页接着改",
-                  onClick: function () { loadChapter(r); }
+                  role: "button",
+                  tabIndex: 0,
+                  onClick: function () { loadChapter(r); },
+                  onKeyDown: function (ev) {
+                    if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); loadChapter(r); }
+                  }
                 },
                   h("span", { className: "asd-tdTitle", title: r.title }, r.title),
                   h("span", null, r.chars),
@@ -4102,6 +5250,29 @@ window.__ModuleLoader__.load({
       }
 
       var proofView = h("div", { className: "asd-list" },
+        h("div", { className: "asd-optRow" },
+          h("span", { className: "asd-optLabel" }, t("自定义错字表")),
+          h("div", { className: "asd-setBody" },
+            h("div", { className: "asd-rowBtns" },
+              h("button", {
+                type: "button", className: "asd-btn",
+                "aria-expanded": String(typoOpen),
+                onClick: function () { setTypoOpen(!typoOpen); }
+              }, typoOpen ? t("收起错字表") : t("自定义错字表") + (typos.length ? " · " + typos.length : "")),
+              h("span", { className: "asd-pfSum" }, t("固定表之外，自己再补几条"))
+            ),
+            typoOpen
+              ? h("textarea", {
+                className: "asd-optInput",
+                "aria-label": t("自定义错字表"),
+                placeholder: "帐号→账号\n另据→另据",
+                value: pairsText(typos),
+                onChange: function (e) { setTypos(parsePairs(e.target.value)); }
+              })
+              : null
+          )
+        ),
+
         h("div", { className: "asd-rev", "data-state": pfState },
           h("i", { className: "asd-revDot" }),
           h("span", { className: "asd-revText" }, pfText),
@@ -4276,6 +5447,7 @@ window.__ModuleLoader__.load({
         h("textarea", {
           className: "asd-input",
           value: text,
+          "aria-label": t("正文"),
           placeholder: "粘贴或输入一段中文文本，实时检测「AI 味」……",
           spellCheck: false,
           onChange: function (e) { setText(e.target.value); }
@@ -4302,6 +5474,7 @@ window.__ModuleLoader__.load({
           h("span", null, analysis.sentCount + " 句"),
           h("span", null, analysis.paraCount + " 段"),
           analysis.chars ? h("span", null, "均句长 " + analysis.avgLen + " 字") : null,
+          heavyText ? h("span", { title: "长文：出分稍微等一会儿，重点与热力在各自页签里现算" }, "长文 · 延迟出分") : null,
           h("button", {
             type: "button", className: "asd-headBtn asd-metaBtn",
             title: "在全屏窗口里编辑长文（Esc 关闭）",
@@ -4386,12 +5559,33 @@ window.__ModuleLoader__.load({
                     key: d.key,
                     type: "button",
                     className: "asd-chip",
+                    "data-dim": d.key,
                     "data-on": String(off),
                     title: off
                       ? "点一下恢复这一项计分"
                       : "点一下：「" + d.label + "」这一项不算分，也不再提示（适合你的文体用不上这项时）",
                     onClick: function () { ignoreDim(d.key); }
                   }, d.label);
+                })
+              )
+            ),
+            h("div", { className: "asd-optRow" },
+              h("span", { className: "asd-optLabel" }, "界面语言"),
+              h("div", { className: "asd-chips" },
+                [{ id: "auto", label: "跟随系统" }, { id: "zh", label: "中文" }, { id: "en", label: "English" }].map(function (o) {
+                  return h("button", {
+                    key: o.id,
+                    type: "button",
+                    className: "asd-chip",
+                    "data-lang": o.id,
+                    "data-on": String(langPref === o.id),
+                    title: o.id === "auto" ? "跟随 DSH 的语言设置" : "强制用这个语言显示界面",
+                    onClick: function () {
+                      if (langPref === o.id) return;
+                      saveLang(o.id);
+                      setLangPref(o.id);
+                    }
+                  }, o.label);
                 })
               )
             ),
@@ -4422,10 +5616,10 @@ window.__ModuleLoader__.load({
             ignoredList.length
               ? h("div", { className: "asd-ignored" },
                 h("span", null, "已忽略："),
-                ignoredList.map(function (sig) {
-                  return h("span", { key: sig, className: "asd-ignoredTag" },
-                    sig.replace("|", " · "),
-                    h("button", { type: "button", className: "asd-btn", onClick: function () { unignoreIssue(sig); } }, "恢复")
+                ignoredList.map(function (row) {
+                  return h("span", { key: row.sig, className: "asd-ignoredTag" },
+                    row.label,
+                    h("button", { type: "button", className: "asd-btn", onClick: function () { unignoreIssue(row.sig); } }, "恢复")
                   );
                 })
               )
@@ -4456,46 +5650,77 @@ window.__ModuleLoader__.load({
             onClick: runReview
           }, revState === "done" ? "重新复审" : "复审")
         ),
-        h("div", { className: "asd-seg", role: "tablist" },
+        h("div", { className: "asd-seg", role: "tablist", "aria-label": t("视图") },
           h("button", {
             type: "button", className: "asd-segBtn", role: "tab",
             "data-on": String(view === "diagnose"),
+            "aria-selected": String(view === "diagnose"),
+            "aria-keyshortcuts": "Alt+1",
+            tabIndex: view === "diagnose" ? 0 : -1,
+            title: "Alt+1",
             onClick: function () { setView("diagnose"); }
           }, "诊断 " + analysis.dims.length),
           h("button", {
             type: "button", className: "asd-segBtn", role: "tab",
             "data-on": String(view === "marks"),
+            "aria-selected": String(view === "marks"),
+            "aria-keyshortcuts": "Alt+2",
+            tabIndex: view === "marks" ? 0 : -1,
+            title: "Alt+2",
             onClick: function () { setView("marks"); }
           }, "标注"),
           h("button", {
             type: "button", className: "asd-segBtn", role: "tab",
             "data-on": String(view === "suggest"),
+            "aria-selected": String(view === "suggest"),
+            "aria-keyshortcuts": "Alt+3",
+            tabIndex: view === "suggest" ? 0 : -1,
+            title: "Alt+3",
             onClick: function () { setView("suggest"); }
           }, "建议 " + liveIssues.length + (analysis.ignoredCount ? " · 忽略 " + analysis.ignoredCount : "")),
           h("button", {
             type: "button", className: "asd-segBtn", role: "tab",
             "data-on": String(view === "proof"),
-            title: "错字是文本对错，跟 AI 味分数无关，所以单开一页",
+            "aria-selected": String(view === "proof"),
+            "aria-keyshortcuts": "Alt+4",
+            tabIndex: view === "proof" ? 0 : -1,
+            title: "Alt+4 · 错字是文本对错，跟 AI 味分数无关，所以单开一页",
             onClick: function () { setView("proof"); }
           }, "错字 " + typoList.length),
           h("button", {
             type: "button", className: "asd-segBtn", role: "tab",
             "data-on": String(view === "history"),
+            "aria-selected": String(view === "history"),
+            "aria-keyshortcuts": "Alt+5",
+            tabIndex: view === "history" ? 0 : -1,
+            title: "Alt+5",
             onClick: function () { setView("history"); }
           }, "记录 " + history.length),
           h("button", {
             type: "button", className: "asd-segBtn", role: "tab",
             "data-on": String(view === "top"),
+            "aria-selected": String(view === "top"),
+            "aria-keyshortcuts": "Alt+6",
+            tabIndex: view === "top" ? 0 : -1,
+            title: "Alt+6",
             onClick: function () { setView("top"); }
           }, "重点" + (topList.length ? " " + topList.length : "")),
           h("button", {
             type: "button", className: "asd-segBtn", role: "tab",
             "data-on": String(view === "compare"),
+            "aria-selected": String(view === "compare"),
+            "aria-keyshortcuts": "Alt+7",
+            tabIndex: view === "compare" ? 0 : -1,
+            title: "Alt+7",
             onClick: function () { setView("compare"); }
           }, "对比"),
           h("button", {
             type: "button", className: "asd-segBtn", role: "tab",
             "data-on": String(view === "batch"),
+            "aria-selected": String(view === "batch"),
+            "aria-keyshortcuts": "Alt+8",
+            tabIndex: view === "batch" ? 0 : -1,
+            title: "Alt+8",
             onClick: function () { setView("batch"); }
           }, "批量"),
         ),
@@ -4542,7 +5767,7 @@ window.__ModuleLoader__.load({
             })
           )
           : null,
-        toast ? h("div", { className: "asd-toast" }, toast) : null
+        toast ? h("div", { className: "asd-toast", role: "status", "aria-live": "polite" }, toast) : null
       );
     }
 
@@ -4582,6 +5807,8 @@ window.__ModuleLoader__.load({
 
       var mounted = false;
       var retries = 0;
+      var settingsMounted = false;
+      var settingsOff = null;
 
       var mountOnce = function () {
         if (mounted) return;
@@ -4591,6 +5818,23 @@ window.__ModuleLoader__.load({
       };
 
       var mountInner = function () {
+        bindLocaleService(probe(ctx, "locale"));
+        // 设置页和侧栏是两条独立的注册路径：侧栏服务没就绪时，设置里照样要能改。
+        if (!settingsMounted) {
+          try {
+            var offSet = ctx.slots.inject("settings.section", function () {
+              return ctx.slots.register(
+                { name: "settings.section", id: "style-detector", order: 30, label: function () { return t(TAB_TITLE); } },
+                SettingsCard
+              );
+            });
+            if (typeof offSet === "function") {
+              settingsMounted = true;
+              settingsOff = offSet;
+            }
+          } catch (e) { /* slots 不可用就跳过，不影响侧栏 */ }
+        }
+
         var tabs = probe(ctx, "sidebarRightTabs");
         var right = probe(ctx, "sidebarRight");
         // 只把「页签类型注册表」当作必要条件；sidebarRight 只是关闭页签时的辅助句柄，
@@ -4605,13 +5849,13 @@ window.__ModuleLoader__.load({
         var offType = tabs.register({
           id: PACKAGE,
           kind: TAB_KIND,
-          title: function () { return TAB_TITLE; },
+          title: function () { return t(TAB_TITLE); },
           keepMounted: true,
           guide: [{
             id: PACKAGE,
             order: 40,
-            title: function () { return TAB_TITLE; },
-            description: function () { return "本地规则引擎检测中文文本的「AI 味」，给出分项诊断与改写建议。"; }
+            title: function () { return t(TAB_TITLE); },
+            description: function () { return t("本地规则引擎检测中文文本的「AI 味」，给出分项诊断与改写建议。"); }
           }]
         });
 
@@ -4628,6 +5872,7 @@ window.__ModuleLoader__.load({
         }
 
         return function () {
+          if (typeof settingsOff === "function") { try { settingsOff(); } catch (e) { /* ignore */ } settingsOff = null; settingsMounted = false; }
           if (typeof offBody === "function") { try { offBody(); } catch (e) { /* ignore */ } }
           if (typeof offType === "function") { try { offType(); } catch (e) { /* ignore */ } }
           // 只关闭本插件 kind 的页签，不碰其它任何页签
