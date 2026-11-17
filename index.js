@@ -377,6 +377,74 @@ async function proofread(ctx, text, explicit) {
   return { ok: true, provider: route.provider, model: route.model, source: route.source, items, dropped };
 }
 
+function sendJson(res, status, payload) {
+  if (res.writableEnded) return;
+  res.statusCode = status;
+  res.setHeader('content-type', 'application/json; charset=utf-8');
+  res.setHeader('cache-control', 'no-store');
+  res.end(JSON.stringify(payload));
+}
+
+// 这两条路由挂在 127.0.0.1 上，本机任何网页都能向它发请求，而一次复审就是一次模型调用。
+// 三道门把网页的偷偷调用挡住，同时不碰 DSH 自己的请求：
+//
+// 1) POST 必须是 application/json。跨站 fetch 想带这个头就得先发 CORS 预检，而本路由既不应答
+//    预检、也不返回任何 CORS 头，预检必失败、请求根本发不出去。反过来 text/plain 这类
+//    「简单请求」不触发预检 —— 那正是网页偷调本地端口最省事的手法，这里直接拒绝（415）。
+// 2) Origin 只接受 DSH 自己的：没有 Origin（非浏览器 / 同源转发）、dsh-app: 与 file:（桌面壳）、
+//    以及 loopback 主机。其它来源一律 403。跨站请求由浏览器强制带上 Origin，绕不过去。
+// 3) 宿主提供 connection.requestRejection 时再问它一次，但只把 403 当作拒绝：401 表示
+//    「没带浏览器凭据」，而桌面壳转发过来的请求本来就不带，按 401 拒绝会把面板自己的请求也打死。
+function originAllowed(origin, host) {
+  if (!origin) return true;
+  const lower = origin.toLowerCase();
+  if (lower === 'null') return false;
+  if (lower.startsWith('dsh-app:') || lower.startsWith('file:')) return true;
+  let hostname = '';
+  try {
+    hostname = new URL(origin).hostname.toLowerCase();
+  } catch (e) {
+    return false;
+  }
+  if (hostname === '127.0.0.1' || hostname === 'localhost' || hostname === '::1' || hostname === '[::1]') return true;
+  const hostName = String(host || '').toLowerCase().split(':')[0];
+  if (hostName && hostname === hostName) return true;
+  return false;
+}
+
+function admit(ctx, req, res, needsJson) {
+  if (needsJson) {
+    const type = String(req.headers['content-type'] || '').toLowerCase();
+    if (type.indexOf('application/json') < 0) {
+      sendJson(res, 415, { ok: false, error: '只接受 application/json 请求' });
+      return false;
+    }
+  }
+
+  if (!originAllowed(req.headers.origin, req.headers.host)) {
+    sendJson(res, 403, { ok: false, error: '不接受来自这个来源的请求' });
+    return false;
+  }
+
+  // 与 dsh-free-search / dshmarket 同一套做法：把宿主的准入检查（Host / Origin 围栏 +
+  // 浏览器登录）借到这两条自建路由上。服务不在的老宿主退回上面两道本地检查。
+  const connection = typeof ctx.get === 'function' ? ctx.get('connection') : null;
+  const reject = connection && connection.requestRejection;
+  if (typeof reject === 'function') {
+    let rejection;
+    try {
+      rejection = reject.call(connection, { headers: req.headers });
+    } catch (e) {
+      rejection = 503;
+    }
+    if (rejection === 401 || rejection === 403 || rejection === 503) {
+      sendJson(res, rejection, { ok: false, error: '请求没有被 DSH 接受' });
+      return false;
+    }
+  }
+  return true;
+}
+
 async function handleProofread(ctx, req, res) {
   const send = (status, payload) => {
     if (res.writableEnded) return;
@@ -390,6 +458,8 @@ async function handleProofread(ctx, req, res) {
     send(405, { ok: false, error: '只接受 POST' });
     return;
   }
+
+  if (!admit(ctx, req, res, true)) return;
 
   let body = '';
   try {
@@ -437,6 +507,7 @@ async function handle(ctx, req, res) {
 
   // GET：只回报本次复审会用的模型，供面板显示，不发起任何模型调用。
   if (req.method === 'GET') {
+    if (!admit(ctx, req, res, false)) return;
     const llm = typeof ctx.get === 'function' ? ctx.get('llm') : null;
     if (!llm || typeof llm.stream !== 'function') {
       send(200, { ok: false, error: '宿主没有模型服务（llm 未挂载）' });
@@ -460,6 +531,8 @@ async function handle(ctx, req, res) {
     send(405, { ok: false, error: '只接受 GET / POST' });
     return;
   }
+
+  if (!admit(ctx, req, res, true)) return;
 
   let body = '';
   try {

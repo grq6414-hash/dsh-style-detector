@@ -50,6 +50,15 @@ pnpm add https://github.com/grq6414-hash/dsh-style-detector/releases/download/v0
 
 > **Do not install this next to the local development copy.** If you previously linked the dev version from `created-plugins`, uninstall it first: both register the same tab kind and the same `/dsh-style-detector/*` routes, and the later one silently loses.
 
+## The two HTTP routes are closed
+
+The panel needs to call the model, so the plugin registers two routes
+(`/dsh-style-detector/review` and `/dsh-style-detector/proofread`). They are not open:
+
+- only `application/json` is accepted, and only DSH's own Origin (or a request with no Origin at all);
+- every request also passes DSH's browser-login check (`ctx.connection.requestRejection`);
+- a web page open in your browser cannot call them — it gets 415 / 403.
+
 ## What it does
 
 ### Diagnose

@@ -59,6 +59,15 @@ pnpm add https://github.com/grq6414-hash/dsh-style-detector/releases/download/v0
 
 > **别和本地开发版同时装**：如果你之前用 `created-plugins` 的 link 方式装过这个插件的开发版，先卸掉。两个插件抢同一个页签类型和同一组路由，后装的那个会静默失效。
 
+## 这两个接口是关着的
+
+面板要调模型，所以插件在宿主上挂了两条路由（`/dsh-style-detector/review`、
+`/dsh-style-detector/proofread`）。它们不是随便能调的：
+
+- 只收 `application/json`，只收 DSH 自己的 Origin（或者没有 Origin 的本机请求）；
+- 并且要过 DSH 的浏览器登录检查（`ctx.connection.requestRejection`）；
+- 浏览器里打开的别的网页没法偷偷调用，只能拿到 415 / 403。
+
 ## 能做什么
 
 ### 诊断
